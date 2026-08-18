@@ -112,3 +112,11 @@ export async function refreshAuthSession(
     sessionId,
   };
 }
+
+export async function deleteAuthSession(sessionId: string) {
+  await prisma.session.deleteMany({
+    where: {
+      id: sessionId,
+    },
+  });
+}

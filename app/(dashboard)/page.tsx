@@ -1,3 +1,5 @@
+import { LogoutButton } from '@/components/authentication/logout/LogoutButton';
+
 export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-background">
@@ -8,6 +10,8 @@ export default function DashboardPage() {
           </h1>
 
           <p className="mt-2 text-muted-foreground">Welcome to e-Invoice.</p>
+
+          <LogoutButton />
         </div>
       </div>
     </main>
