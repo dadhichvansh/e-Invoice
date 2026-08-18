@@ -1,18 +1,14 @@
 import 'server-only';
-import { env } from '../env';
+
 import { cookies } from 'next/headers';
 
-const ACCESS_TOKEN_COOKIE_NAME = 'access_token';
-const REFRESH_TOKEN_COOKIE_NAME = 'refresh_token';
-
-const isProduction = env.NODE_ENV === 'production';
-
-const baseCookieOptions = {
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: 'lax' as const,
-  path: '/',
-};
+import {
+  ACCESS_TOKEN_COOKIE_MAX_AGE_DAYS,
+  ACCESS_TOKEN_COOKIE_NAME,
+  BASE_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_MAX_AGE_DAYS,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../constants/cookies';
 
 export async function setAuthCookies(
   accessToken: string,
@@ -21,13 +17,13 @@ export async function setAuthCookies(
   const cookieStore = await cookies();
 
   cookieStore.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-    ...baseCookieOptions,
-    maxAge: 15 * 60,
+    ...BASE_COOKIE_OPTIONS,
+    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_DAYS,
   });
 
   cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-    ...baseCookieOptions,
-    maxAge: 30 * 24 * 60 * 60,
+    ...BASE_COOKIE_OPTIONS,
+    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_DAYS,
   });
 }
 

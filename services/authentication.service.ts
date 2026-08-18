@@ -7,8 +7,7 @@ import {
   createAccessToken,
   createRefreshToken,
 } from '@/lib/authentication/tokens';
-
-import { AUTHENTICATION_CONSTANTS } from '@/lib/constants/authentication';
+import { SESSION_DURATION_MS } from '@/lib/constants/authentication';
 
 function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -25,13 +24,11 @@ export async function findUserByEmail(email: string) {
 export async function createAuthSession(userId: string) {
   const sessionId = randomUUID();
 
-  const expiresAt = new Date(
-    Date.now() + AUTHENTICATION_CONSTANTS.SESSION_DURATION_MS,
-  );
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
   const accessToken = await createAccessToken(userId, sessionId);
-
   const refreshToken = await createRefreshToken(userId, sessionId);
+
   const refreshTokenHash = hashRefreshToken(refreshToken);
 
   const session = await prisma.session.create({
