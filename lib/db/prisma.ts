@@ -6,12 +6,6 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const dbUrl = new URL(env.DATABASE_URL);
-
-console.log('Prisma database host:', dbUrl.hostname);
-console.log('Prisma database port:', dbUrl.port);
-console.log('Prisma database name:', dbUrl.pathname);
-
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
