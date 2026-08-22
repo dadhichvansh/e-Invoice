@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 
-import { LogoutButton } from '@/components/authentication/logout/LogoutButton';
+import { LogoutButton } from '@/components/authentication/LogoutButton';
 import { Navigation } from './Navigation';
 
 export function Sidebar() {
@@ -32,7 +32,7 @@ export function Sidebar() {
       </div>
 
       {/* Logout */}
-      <div className="shrink-0 border-t border-border p-3">
+      <div className="shrink-0 border-t border-border p-2">
         <LogoutButton />
       </div>
     </aside>

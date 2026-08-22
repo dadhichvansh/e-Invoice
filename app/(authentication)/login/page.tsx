@@ -4,7 +4,7 @@ import { useActionState, useEffect } from 'react';
 import { login, type LoginState } from '@/actions/authentication/login';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { LoginCard } from '@/components/authentication/login/LoginCard';
+import { LoginCard } from '@/components/authentication/LoginCard';
 
 const initialState: LoginState = {
   success: false,

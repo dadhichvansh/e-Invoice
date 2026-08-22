@@ -1,9 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { LogOut, Settings } from 'lucide-react';
-import { LogoutButton } from '@/components/authentication/logout/LogoutButton';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { ChevronDown, LogOut, Settings } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { logout } from '@/actions/authentication/logout';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface UserMenuProps {
   name: string;
@@ -11,22 +21,8 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ name, email }: UserMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const router = useRouter();
+  const [isLoggingOut, startLogoutTransition] = useTransition();
 
   const initials = name
     .split(' ')
@@ -35,63 +31,68 @@ export function UserMenu({ name, email }: UserMenuProps) {
     .slice(0, 2)
     .toUpperCase();
 
+  const handleLogout = () => {
+    startLogoutTransition(async () => {
+      const result = await logout();
+
+      if (result.success) {
+        toast.success(result.message);
+        router.replace('/login');
+        return;
+      }
+
+      toast.error(result.message);
+    });
+  };
+
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen((previous) => !previous)}
-        className="flex items-center gap-3 rounded-3xl px-1 py-1 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
-        aria-expanded={isOpen}
-        aria-haspopup="menu"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Open user menu"
       >
-        <div className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
-          {initials}
-        </div>
+        <Avatar className="size-9">
+          <AvatarFallback className="bg-primary text-sm font-medium text-primary-foreground">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
 
         <div className="hidden text-left sm:block">
           <p className="max-w-52 truncate text-sm font-medium text-foreground">
             {email}
           </p>
         </div>
-      </button>
 
-      {isOpen && (
-        <div
-          className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
-          role="menu"
-        >
-          <div className="border-b border-border px-4 py-3">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {name}
-            </p>
+        <ChevronDown className="mr-1 hidden size-4 text-muted-foreground sm:block" />
+      </DropdownMenuTrigger>
 
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">
-              {email}
-            </p>
-          </div>
+      <DropdownMenuContent align="end" sideOffset={8} className="w-60">
+        <div className="px-2 py-2">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {name}
+          </p>
 
-          <div className="p-1.5">
-            <Link
-              href="/settings"
-              onClick={() => setIsOpen(false)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted"
-              role="menuitem"
-            >
-              <Settings className="size-4 text-muted-foreground" />
-              <span>Settings</span>
-            </Link>
-
-            <div
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
-              role="menuitem"
-            >
-              <LogOut className="size-4" />
-
-              <LogoutButton />
-            </div>
-          </div>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">
+            {email}
+          </p>
         </div>
-      )}
-    </div>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem onClick={() => router.push('/settings')}>
+          <Settings className="size-4" />
+          <span>Settings</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="text-destructive focus:text-destructive"
+        >
+          <LogOut className="size-4" />
+          <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
