@@ -6,11 +6,11 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireAuthentication();
+  const { user } = await requireAuthentication();
 
   return (
     <div className="min-h-screen bg-background">
-      <Shell>{children}</Shell>
+      <Shell user={user}>{children}</Shell>
     </div>
   );
 }

@@ -5,11 +5,18 @@ import { useState } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
-interface ShellProps {
-  children: React.ReactNode;
+interface ShellUser {
+  id: string;
+  name: string;
+  email: string;
 }
 
-export function Shell({ children }: ShellProps) {
+interface ShellProps {
+  children: React.ReactNode;
+  user: ShellUser;
+}
+
+export function Shell({ children, user }: ShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => {
@@ -23,6 +30,7 @@ export function Shell({ children }: ShellProps) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Header
           title="Dashboard"
+          user={user}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={toggleSidebar}
         />

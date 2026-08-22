@@ -4,14 +4,22 @@ import { ThemeSelector } from '../ui/theme-selector';
 import { MobileNavigation } from './MobileNavigation';
 import { UserMenu } from './UserMenu';
 
+interface HeaderUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface HeaderProps {
   title: string;
+  user: HeaderUser;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
 }
 
 export function Header({
   title,
+  user,
   sidebarCollapsed,
   onToggleSidebar,
 }: HeaderProps) {
@@ -43,7 +51,7 @@ export function Header({
       <div className="ml-auto flex items-center gap-3">
         <ThemeSelector />
 
-        <UserMenu name="Vansh Dadhich" email="dadhichvansh46@gmail.com" />
+        <UserMenu name={user.name} email={user.email} />
       </div>
     </header>
   );

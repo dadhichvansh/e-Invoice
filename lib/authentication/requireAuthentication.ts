@@ -23,6 +23,11 @@ export async function requireAuthentication() {
     return {
       userId: payload.sub,
       sessionId: payload.sessionId,
+      user: {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      },
     };
   } catch {
     redirect('/api/authentication/refresh');
