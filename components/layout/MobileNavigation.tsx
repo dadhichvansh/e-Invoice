@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
 
 import { LogoutButton } from '@/components/authentication/LogoutButton';
 import { Navigation } from './Navigation';
@@ -11,58 +10,98 @@ export function MobileNavigation() {
 
   return (
     <>
+      {/* Mobile menu trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Open navigation"
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+        aria-expanded={isOpen}
+        className="group inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors duration-300 hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring md:hidden"
       >
-        <Menu className="size-5" />
-      </button>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* Overlay */}
-          <button
-            type="button"
-            aria-label="Close navigation"
-            onClick={() => setIsOpen(false)}
-            className="absolute inset-0 bg-foreground/20"
+        <span className="relative flex size-5 items-center justify-center">
+          {/* Top bar */}
+          <span
+            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-400 ease-in-out ${
+              isOpen ? 'translate-y-0 rotate-45' : '-translate-y-1.5 rotate-0'
+            }`}
           />
 
-          {/* Navigation Drawer */}
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-border bg-card shadow-lg">
-            {/* Drawer Header */}
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
-              <span className="text-lg font-semibold tracking-tight text-foreground">
-                e-Invoice
-              </span>
+          {/* Middle bar */}
+          <span
+            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-300 ease-in-out ${
+              isOpen ? 'scale-x-0 opacity-0' : 'scale-x-100 opacity-100'
+            }`}
+          />
 
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close navigation"
-                className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
+          {/* Bottom bar */}
+          <span
+            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-400 ease-in-out ${
+              isOpen ? 'translate-y-0 -rotate-45' : 'translate-y-1.5 rotate-0'
+            }`}
+          />
+        </span>
+      </button>
 
-            {/* Navigation */}
-            <div
-              className="min-h-0 flex-1 overflow-y-auto"
+      {/* Mobile navigation drawer */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden ${
+          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+        aria-hidden={!isOpen}
+      >
+        {/* Overlay */}
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setIsOpen(false)}
+          className={`absolute inset-0 bg-foreground/20 transition-opacity duration-500 ease-out ${
+            isOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+
+        {/* Drawer */}
+        <aside
+          className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-border bg-card shadow-lg transition-transform duration-500 ease-out ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
+            <span className="text-lg font-semibold tracking-tight text-foreground">
+              e-Invoice
+            </span>
+
+            {/* Animated close button */}
+            <button
+              type="button"
               onClick={() => setIsOpen(false)}
+              aria-label="Close navigation"
+              className="group inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors duration-300 hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <Navigation />
-            </div>
+              <span className="relative flex size-5 items-center justify-center">
+                {/* X top bar */}
+                <span className="absolute h-0.5 w-5 rotate-45 rounded-full bg-current transition-transform duration-400 ease-in-out group-hover:scale-110" />
 
-            {/* Logout */}
-            <div className="shrink-0 border-t border-border p-3">
-              <LogoutButton />
-            </div>
-          </aside>
-        </div>
-      )}
+                {/* X bottom bar */}
+                <span className="absolute h-0.5 w-5 -rotate-45 rounded-full bg-current transition-transform duration-400 ease-in-out group-hover:scale-110" />
+              </span>
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <div
+            className="min-h-0 flex-1 overflow-y-auto"
+            onClick={() => setIsOpen(false)}
+          >
+            <Navigation />
+          </div>
+
+          {/* Logout */}
+          <div className="shrink-0 border-t border-border p-3">
+            <LogoutButton />
+          </div>
+        </aside>
+      </div>
     </>
   );
 }

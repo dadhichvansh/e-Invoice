@@ -8,7 +8,11 @@ import { toast } from 'sonner';
 import { logout } from '@/actions/authentication/logout';
 import { Button } from '@/components/ui/button';
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+  collapsed?: boolean;
+}
+
+export function LogoutButton({ collapsed = false }: LogoutButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -26,17 +30,29 @@ export function LogoutButton() {
     });
   };
 
+  const label = isPending ? 'Logging out...' : 'Logout';
+
   return (
     <Button
       type="button"
       variant="ghost"
       onClick={handleLogout}
       disabled={isPending}
-      className="h-10 w-full justify-start gap-3 rounded-2xl border-0 px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+      title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
+      className={`h-10 w-full rounded-2xl border-0 text-sm font-medium text-muted-foreground shadow-none transition-[gap,padding,background-color,color] duration-400 ease-in-out hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring ${
+        collapsed ? 'justify-center gap-0 px-2.5' : 'justify-start gap-3 px-3'
+      }`}
     >
       <LogOut className="size-4 shrink-0" />
 
-      <span>{isPending ? 'Logging out...' : 'Logout'}</span>
+      <span
+        className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-400 ease-in-out ${
+          collapsed ? 'max-w-0 opacity-0' : 'max-w-32 opacity-100'
+        }`}
+      >
+        {label}
+      </span>
     </Button>
   );
 }

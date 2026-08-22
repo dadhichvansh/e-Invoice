@@ -27,7 +27,11 @@ const navigationItems = [
   },
 ];
 
-export function Navigation() {
+interface NavigationProps {
+  collapsed?: boolean;
+}
+
+export function Navigation({ collapsed = false }: NavigationProps) {
   const pathname = usePathname();
 
   return (
@@ -45,14 +49,24 @@ export function Navigation() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                title={collapsed ? item.label : undefined}
+                className={`flex items-center rounded-2xl py-2.5 text-sm font-medium transition-[gap,padding,background-color,color] duration-500 ease-in-out ${
+                  collapsed ? 'justify-center gap-0 px-2.5' : 'gap-3 px-3'
+                } ${
                   isActive
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                 }`}
               >
-                <Icon className="size-4" />
-                <span>{item.label}</span>
+                <Icon className="size-4 shrink-0" />
+
+                <span
+                  className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-400 ease-in-out ${
+                    collapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
+                  }`}
+                >
+                  {item.label}
+                </span>
               </Link>
             </li>
           );
