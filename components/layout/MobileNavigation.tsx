@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 import { LogoutButton } from '@/components/authentication/LogoutButton';
 import { Navigation } from './Navigation';
@@ -16,30 +17,9 @@ export function MobileNavigation() {
         onClick={() => setIsOpen(true)}
         aria-label="Open navigation"
         aria-expanded={isOpen}
-        className="group inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors duration-300 hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring md:hidden"
+        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring md:hidden"
       >
-        <span className="relative flex size-5 items-center justify-center">
-          {/* Top bar */}
-          <span
-            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-400 ease-in-out ${
-              isOpen ? 'translate-y-0 rotate-45' : '-translate-y-1.5 rotate-0'
-            }`}
-          />
-
-          {/* Middle bar */}
-          <span
-            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-300 ease-in-out ${
-              isOpen ? 'scale-x-0 opacity-0' : 'scale-x-100 opacity-100'
-            }`}
-          />
-
-          {/* Bottom bar */}
-          <span
-            className={`absolute h-0.5 w-5 rounded-full bg-current transition-[transform,opacity] duration-400 ease-in-out ${
-              isOpen ? 'translate-y-0 -rotate-45' : 'translate-y-1.5 rotate-0'
-            }`}
-          />
-        </span>
+        <Menu className="size-5" />
       </button>
 
       {/* Mobile navigation drawer */}
@@ -71,20 +51,14 @@ export function MobileNavigation() {
               e-Invoice
             </span>
 
-            {/* Animated close button */}
+            {/* Close button */}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Close navigation"
-              className="group inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors duration-300 hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <span className="relative flex size-5 items-center justify-center">
-                {/* X top bar */}
-                <span className="absolute h-0.5 w-5 rotate-45 rounded-full bg-current transition-transform duration-400 ease-in-out group-hover:scale-110" />
-
-                {/* X bottom bar */}
-                <span className="absolute h-0.5 w-5 -rotate-45 rounded-full bg-current transition-transform duration-400 ease-in-out group-hover:scale-110" />
-              </span>
+              <X className="size-5" />
             </button>
           </div>
 
