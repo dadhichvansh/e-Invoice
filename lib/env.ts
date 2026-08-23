@@ -11,6 +11,12 @@ const envSchema = z.object({
 
   ACCESS_TOKEN_EXPIRY: z.string().default('15m'),
   REFRESH_TOKEN_EXPIRY: z.string().default('30d'),
+
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number().int().positive(),
+  SMTP_USER: z.email(),
+  SMTP_PASSWORD: z.string().min(1),
+  EMAIL_FROM: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);
