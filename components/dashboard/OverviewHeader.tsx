@@ -16,7 +16,7 @@ export function OverviewHeader() {
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
         >
           <UserPlus className="size-4" />
           Add Client
@@ -24,7 +24,7 @@ export function OverviewHeader() {
 
         <button
           type="button"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           <FilePlus className="size-4" />
           New Invoice
