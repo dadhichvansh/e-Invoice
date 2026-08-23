@@ -91,7 +91,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function RecentInvoices() {
   return (
-    <Card className="overflow-hidden rounded-2xl">
+    <Card className="overflow-hidden rounded-3xl">
       <CardHeader className="flex flex-row items-center justify-between gap-4 px-6">
         <div>
           <CardTitle>Recent Invoices</CardTitle>

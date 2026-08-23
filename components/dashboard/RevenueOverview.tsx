@@ -43,9 +43,9 @@ function formatCurrency(value: number) {
 
 export function RevenueOverview() {
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-3xl">
       <CardHeader>
-        <CardTitle>Revenue Overview</CardTitle>
+        <CardTitle>Revenue</CardTitle>
 
         <CardDescription>Last 6 months · Paid invoices</CardDescription>
       </CardHeader>

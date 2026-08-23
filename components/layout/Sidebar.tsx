@@ -43,7 +43,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
               e-Invoice
             </p>
 
-            <p className="mt-0.5 text-xs leading-tight text-muted-foreground">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Freelance invoicing
             </p>
           </div>
@@ -58,7 +58,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
       {/* Logout */}
       <div
         className={`shrink-0 border-t border-border transition-[padding] duration-500 ease-in-out ${
-          collapsed ? 'p-2' : 'p-2'
+          collapsed ? 'p-2' : 'p-1.5'
         }`}
       >
         <LogoutButton collapsed={collapsed} />

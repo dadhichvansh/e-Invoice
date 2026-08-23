@@ -35,7 +35,7 @@ export function Navigation({ collapsed = false }: NavigationProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="px-2 py-4">
+    <nav className="px-1.5 py-4">
       <ul className="space-y-1">
         {navigationItems.map((item) => {
           const Icon = item.icon;
@@ -54,7 +54,7 @@ export function Navigation({ collapsed = false }: NavigationProps) {
                   collapsed ? 'justify-center gap-0 px-2.5' : 'gap-3 px-3'
                 } ${
                   isActive
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-secondary text-foreground'
                     : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                 }`}
               >

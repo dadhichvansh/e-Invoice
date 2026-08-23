@@ -91,7 +91,7 @@ export function LoginCard({ formAction, isPending }: LoginCardProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary-hover focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? 'Signing in...' : 'Sign in'}
         </button>

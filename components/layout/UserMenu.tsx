@@ -51,7 +51,7 @@ export function UserMenu({ name, email }: UserMenuProps) {
         className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-muted focus:outline-none"
         aria-label="Open user menu"
       >
-        <Avatar className="size-9">
+        <Avatar className="size-8">
           <AvatarFallback className="bg-primary text-sm font-medium text-primary-foreground">
             {initials}
           </AvatarFallback>
