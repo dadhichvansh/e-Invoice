@@ -1,6 +1,5 @@
 import Link from 'next/link';
-
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, FileText } from 'lucide-react';
 
 import {
   Table,
@@ -57,24 +56,43 @@ const recentInvoices = [
   },
 ];
 
-function getStatusVariant(status: string) {
-  switch (status) {
-    case 'Paid':
-      return 'default';
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
-    case 'Overdue':
-      return 'destructive';
-
-    case 'Pending':
-    default:
-      return 'secondary';
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'Paid') {
+    return (
+      <Badge className="border-transparent bg-primary/15 text-primary hover:bg-primary/15">
+        Paid
+      </Badge>
+    );
   }
+
+  if (status === 'Overdue') {
+    return (
+      <Badge className="border-transparent bg-destructive/15 text-destructive hover:bg-destructive/15">
+        Overdue
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="border-border bg-secondary text-muted-foreground hover:bg-secondary">
+      Pending
+    </Badge>
+  );
 }
 
 export function RecentInvoices() {
   return (
-    <Card className="rounded-2xl">
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
+    <Card className="overflow-hidden rounded-2xl">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 px-6">
         <div>
           <CardTitle>Recent Invoices</CardTitle>
 
@@ -93,10 +111,11 @@ export function RecentInvoices() {
       </CardHeader>
 
       <CardContent className="px-0">
-        <div className="overflow-x-auto">
+        {/* Desktop */}
+        <div className="hidden md:block">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6">Invoice</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Date</TableHead>
@@ -107,13 +126,30 @@ export function RecentInvoices() {
 
             <TableBody>
               {recentInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="pl-6 font-medium">
-                    {invoice.id}
+                <TableRow
+                  key={invoice.id}
+                  className="transition-colors hover:bg-secondary/40"
+                >
+                  <TableCell className="pl-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+                        <FileText className="size-4" />
+                      </div>
+
+                      <span className="font-medium text-foreground">
+                        {invoice.id}
+                      </span>
+                    </div>
                   </TableCell>
 
-                  <TableCell className="whitespace-nowrap">
-                    {invoice.client}
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                        {getInitials(invoice.client)}
+                      </div>
+
+                      <span className="font-medium">{invoice.client}</span>
+                    </div>
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap text-muted-foreground">
@@ -121,18 +157,56 @@ export function RecentInvoices() {
                   </TableCell>
 
                   <TableCell>
-                    <Badge variant={getStatusVariant(invoice.status)}>
-                      {invoice.status}
-                    </Badge>
+                    <StatusBadge status={invoice.status} />
                   </TableCell>
 
-                  <TableCell className="pr-6 text-right font-medium whitespace-nowrap">
+                  <TableCell className="pr-6 text-right font-semibold whitespace-nowrap">
                     {invoice.amount}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile */}
+        <div className="divide-y divide-border md:hidden">
+          {recentInvoices.map((invoice) => (
+            <div
+              key={invoice.id}
+              className="px-5 py-4 transition-colors hover:bg-secondary/40"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+                    <FileText className="size-4" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {invoice.id}
+                    </p>
+
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {invoice.client}
+                    </p>
+                  </div>
+                </div>
+
+                <StatusBadge status={invoice.status} />
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-4 pl-12">
+                <span className="text-xs text-muted-foreground">
+                  {invoice.date}
+                </span>
+
+                <span className="text-sm font-semibold text-foreground">
+                  {invoice.amount}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
