@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, PanelLeft, Sparkles, X } from 'lucide-react';
 
 import { LogoutButton } from '@/components/authentication/LogoutButton';
 import { Navigation } from './Navigation';
@@ -17,9 +17,9 @@ export function MobileNavigation() {
         onClick={() => setIsOpen(true)}
         aria-label="Open navigation"
         aria-expanded={isOpen}
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring md:hidden"
+        className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none md:hidden cursor-pointer"
       >
-        <Menu className="size-5" />
+        <PanelLeft className="size-4" />
       </button>
 
       {/* Mobile navigation drawer */}
@@ -34,7 +34,7 @@ export function MobileNavigation() {
           type="button"
           aria-label="Close navigation"
           onClick={() => setIsOpen(false)}
-          className={`absolute inset-0 bg-foreground/20 transition-opacity duration-500 ease-out ${
+          className={`absolute inset-0 bg-black/80 transition-opacity duration-300 ease-out ${
             isOpen ? 'opacity-100' : 'opacity-0'
           }`}
         />
@@ -46,27 +46,28 @@ export function MobileNavigation() {
           }`}
         >
           {/* Drawer Header */}
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
-            <span className="text-lg font-semibold tracking-tight text-foreground">
-              e-Invoice
-            </span>
+          <div className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Sparkles className="size-4" />
+            </div>
 
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close navigation"
-              className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            <div
+              className={
+                'min-w-0 overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-400 ease-in-out max-w-40 opacity-100'
+              }
             >
-              <X className="size-5" />
-            </button>
+              <p className="truncate text-sm font-semibold leading-tight text-foreground">
+                e-Invoice
+              </p>
+
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Freelance invoicing
+              </p>
+            </div>
           </div>
 
           {/* Navigation */}
-          <div
-            className="min-h-0 flex-1 overflow-y-auto"
-            onClick={() => setIsOpen(false)}
-          >
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <Navigation />
           </div>
 

@@ -34,7 +34,7 @@ export function Header({
           onClick={onToggleSidebar}
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="hidden size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none md:inline-flex"
+          className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus:outline-none md:inline-flex cursor-pointer"
         >
           {sidebarCollapsed ? (
             <PanelLeft className="size-4" />
