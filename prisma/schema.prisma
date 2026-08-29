@@ -97,7 +97,7 @@ model PaymentMethod {
 
   name    String
   type    PaymentMethodType
-  details String
+  details Json
 
   isDefault Boolean @default(false) @map("is_default")
 

@@ -64,13 +64,39 @@ export function AddPaymentMethodDialog({
 }: AddPaymentMethodDialogProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<PaymentMethodType>('BANK_TRANSFER');
-  const [details, setDetails] = useState('');
+  const [bankTransferDetails, setBankTransferDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    ifsc: '',
+    swift: '',
+  });
+  const [upiDetails, setUpiDetails] = useState({
+    upiId: '',
+  });
+  const [paypalDetails, setPaypalDetails] = useState({
+    email: '',
+  });
+  const [wiseDetails, setWiseDetails] = useState({
+    email: '',
+  });
+  const [otherDetails, setOtherDetails] = useState({
+    instructions: '',
+  });
   const [isDefault, setIsDefault] = useState(false);
-
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string[];
     type?: string[];
-    details?: string[];
+    details?: {
+      accountHolderName?: string[];
+      bankName?: string[];
+      accountNumber?: string[];
+      ifsc?: string[];
+      swift?: string[];
+      upiId?: string[];
+      email?: string[];
+      instructions?: string[];
+    };
     isDefault?: string[];
   }>({});
 
@@ -79,13 +105,77 @@ export function AddPaymentMethodDialog({
   const resetForm = () => {
     setName('');
     setType('BANK_TRANSFER');
-    setDetails('');
+
+    setBankTransferDetails({
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      ifsc: '',
+      swift: '',
+    });
+
+    setUpiDetails({
+      upiId: '',
+    });
+
+    setPaypalDetails({
+      email: '',
+    });
+
+    setWiseDetails({
+      email: '',
+    });
+
+    setOtherDetails({
+      instructions: '',
+    });
+
     setIsDefault(false);
     setFieldErrors({});
   };
 
   const handleSubmit = () => {
     setFieldErrors({});
+
+    let details:
+      | {
+          accountHolderName: string;
+          bankName: string;
+          accountNumber: string;
+          ifsc: string;
+          swift?: string;
+        }
+      | {
+          upiId: string;
+        }
+      | {
+          email: string;
+        }
+      | {
+          instructions: string;
+        };
+
+    switch (type) {
+      case 'BANK_TRANSFER':
+        details = bankTransferDetails;
+        break;
+
+      case 'UPI':
+        details = upiDetails;
+        break;
+
+      case 'PAYPAL':
+        details = paypalDetails;
+        break;
+
+      case 'WISE':
+        details = wiseDetails;
+        break;
+
+      case 'OTHER':
+        details = otherDetails;
+        break;
+    }
 
     startTransition(async () => {
       const result = await createPaymentMethod({
@@ -117,7 +207,7 @@ export function AddPaymentMethodDialog({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add payment method</DialogTitle>
 
@@ -126,7 +216,7 @@ export function AddPaymentMethodDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="payment-method-name">Name</Label>
@@ -168,6 +258,7 @@ export function AddPaymentMethodDialog({
                     setFieldErrors((current) => ({
                       ...current,
                       type: undefined,
+                      details: undefined,
                     }));
                   }
                 }
@@ -188,7 +279,12 @@ export function AddPaymentMethodDialog({
                 </SelectValue>
               </SelectTrigger>
 
-              <SelectContent>
+              <SelectContent
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                alignItemWithTrigger={false}
+              >
                 {paymentMethodTypes.map((methodType) => (
                   <SelectItem key={methodType.value} value={methodType.value}>
                     {methodType.label}
@@ -202,44 +298,413 @@ export function AddPaymentMethodDialog({
             )}
           </div>
 
-          {/* Details */}
-          <div className="space-y-2">
-            <Label htmlFor="payment-method-details">Payment details</Label>
+          {/* Payment details */}
+          {type === 'BANK_TRANSFER' && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Bank transfer details
+                </h3>
 
-            <Textarea
-              id="payment-method-details"
-              value={details}
-              onChange={(event) => {
-                setDetails(event.target.value);
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Enter the bank account details your customers need for
+                  payment.
+                </p>
+              </div>
 
-                if (fieldErrors.details) {
-                  setFieldErrors((current) => ({
-                    ...current,
-                    details: undefined,
-                  }));
-                }
-              }}
-              placeholder={
-                'Account Name: ABC Technologies\nBank: HDFC Bank\nAccount Number: XXXXXXXX\nIFSC: HDFC0001234'
-              }
-              rows={5}
-              disabled={isPending}
-              aria-invalid={Boolean(fieldErrors.details?.length)}
-            />
+              <div className="sm:col-span-2">
+                {/* Account holder name */}
+                <div className="space-y-2">
+                  <Label htmlFor="account-holder-name">
+                    Account holder name
+                  </Label>
 
-            <p className="text-xs text-muted-foreground">
-              Enter the payment information your customers need.
-            </p>
+                  <Input
+                    id="account-holder-name"
+                    value={bankTransferDetails.accountHolderName}
+                    onChange={(event) => {
+                      setBankTransferDetails((current) => ({
+                        ...current,
+                        accountHolderName: event.target.value,
+                      }));
 
-            {fieldErrors.details?.[0] && (
-              <p className="text-xs text-destructive">
-                {fieldErrors.details[0]}
+                      if (fieldErrors.details?.accountHolderName) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          details: {
+                            ...current.details,
+                            accountHolderName: undefined,
+                          },
+                        }));
+                      }
+                    }}
+                    placeholder="John Doe"
+                    disabled={isPending}
+                    aria-invalid={Boolean(
+                      fieldErrors.details?.accountHolderName?.length,
+                    )}
+                    className="mt-1.5 mb-3.5"
+                  />
+
+                  {fieldErrors.details?.accountHolderName?.[0] && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.details.accountHolderName[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* Bank name */}
+                <div className="space-y-2">
+                  <Label htmlFor="bank-name">Bank name</Label>
+
+                  <Input
+                    id="bank-name"
+                    value={bankTransferDetails.bankName}
+                    onChange={(event) => {
+                      setBankTransferDetails((current) => ({
+                        ...current,
+                        bankName: event.target.value,
+                      }));
+
+                      if (fieldErrors.details?.bankName) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          details: {
+                            ...current.details,
+                            bankName: undefined,
+                          },
+                        }));
+                      }
+                    }}
+                    placeholder="HDFC Bank"
+                    disabled={isPending}
+                    aria-invalid={Boolean(
+                      fieldErrors.details?.bankName?.length,
+                    )}
+                    className="mt-1.5 mb-3.5"
+                  />
+
+                  {fieldErrors.details?.bankName?.[0] && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.details.bankName[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* Account number */}
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="account-number">Account number</Label>
+
+                  <Input
+                    id="account-number"
+                    value={bankTransferDetails.accountNumber}
+                    onChange={(event) => {
+                      setBankTransferDetails((current) => ({
+                        ...current,
+                        accountNumber: event.target.value,
+                      }));
+
+                      if (fieldErrors.details?.accountNumber) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          details: {
+                            ...current.details,
+                            accountNumber: undefined,
+                          },
+                        }));
+                      }
+                    }}
+                    placeholder="1234567890"
+                    disabled={isPending}
+                    aria-invalid={Boolean(
+                      fieldErrors.details?.accountNumber?.length,
+                    )}
+                    className="mt-1.5 mb-3.5"
+                  />
+
+                  {fieldErrors.details?.accountNumber?.[0] && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.details.accountNumber[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* IFSC */}
+                <div className="space-y-2">
+                  <Label htmlFor="ifsc">IFSC code</Label>
+
+                  <Input
+                    id="ifsc"
+                    value={bankTransferDetails.ifsc}
+                    onChange={(event) => {
+                      setBankTransferDetails((current) => ({
+                        ...current,
+                        ifsc: event.target.value,
+                      }));
+
+                      if (fieldErrors.details?.ifsc) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          details: {
+                            ...current.details,
+                            ifsc: undefined,
+                          },
+                        }));
+                      }
+                    }}
+                    placeholder="HDFC0001234"
+                    disabled={isPending}
+                    aria-invalid={Boolean(fieldErrors.details?.ifsc?.length)}
+                    className="mt-1.5 mb-3.5"
+                  />
+
+                  {fieldErrors.details?.ifsc?.[0] && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.details.ifsc[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* SWIFT */}
+                <div className="space-y-2">
+                  <Label htmlFor="swift">
+                    SWIFT code
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">
+                      (optional)
+                    </span>
+                  </Label>
+
+                  <Input
+                    id="swift"
+                    value={bankTransferDetails.swift}
+                    onChange={(event) => {
+                      setBankTransferDetails((current) => ({
+                        ...current,
+                        swift: event.target.value,
+                      }));
+
+                      if (fieldErrors.details?.swift) {
+                        setFieldErrors((current) => ({
+                          ...current,
+                          details: {
+                            ...current.details,
+                            swift: undefined,
+                          },
+                        }));
+                      }
+                    }}
+                    placeholder="HDFCINBB"
+                    disabled={isPending}
+                    aria-invalid={Boolean(fieldErrors.details?.swift?.length)}
+                    className="mt-1.5 mb-1.5"
+                  />
+
+                  {fieldErrors.details?.swift?.[0] && (
+                    <p className="text-xs text-destructive">
+                      {fieldErrors.details.swift[0]}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {type === 'UPI' && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  UPI details
+                </h3>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enter the UPI ID customers should use for payment.
+                </p>
+              </div>
+
+              <Label htmlFor="upi-id">UPI ID</Label>
+
+              <Input
+                id="upi-id"
+                value={upiDetails.upiId}
+                onChange={(event) => {
+                  setUpiDetails({
+                    upiId: event.target.value,
+                  });
+
+                  if (fieldErrors.details?.upiId) {
+                    setFieldErrors((current) => ({
+                      ...current,
+                      details: {
+                        ...current.details,
+                        upiId: undefined,
+                      },
+                    }));
+                  }
+                }}
+                placeholder="business@upi"
+                disabled={isPending}
+                aria-invalid={Boolean(fieldErrors.details?.upiId?.length)}
+                className="mt-3.5"
+              />
+
+              {fieldErrors.details?.upiId?.[0] && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.details.upiId[0]}
+                </p>
+              )}
+            </div>
+          )}
+
+          {type === 'PAYPAL' && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  PayPal details
+                </h3>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enter the PayPal email address customers should use for
+                  payment.
+                </p>
+              </div>
+
+              <Label htmlFor="paypal-email">PayPal email</Label>
+
+              <Input
+                id="paypal-email"
+                type="email"
+                value={paypalDetails.email}
+                onChange={(event) => {
+                  setPaypalDetails({
+                    email: event.target.value,
+                  });
+
+                  if (fieldErrors.details?.email) {
+                    setFieldErrors((current) => ({
+                      ...current,
+                      details: {
+                        ...current.details,
+                        email: undefined,
+                      },
+                    }));
+                  }
+                }}
+                placeholder="payments@example.com"
+                disabled={isPending}
+                aria-invalid={Boolean(fieldErrors.details?.email?.length)}
+                className="mt-3.5"
+              />
+
+              {fieldErrors.details?.email?.[0] && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.details.email[0]}
+                </p>
+              )}
+            </div>
+          )}
+
+          {type === 'WISE' && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Wise details
+                </h3>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enter the Wise email address customers should use for payment.
+                </p>
+              </div>
+
+              <Label htmlFor="wise-email">Wise email</Label>
+
+              <Input
+                id="wise-email"
+                type="email"
+                value={wiseDetails.email}
+                onChange={(event) => {
+                  setWiseDetails({
+                    email: event.target.value,
+                  });
+
+                  if (fieldErrors.details?.email) {
+                    setFieldErrors((current) => ({
+                      ...current,
+                      details: {
+                        ...current.details,
+                        email: undefined,
+                      },
+                    }));
+                  }
+                }}
+                placeholder="payments@example.com"
+                disabled={isPending}
+                aria-invalid={Boolean(fieldErrors.details?.email?.length)}
+                className="mt-3.5"
+              />
+
+              {fieldErrors.details?.email?.[0] && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.details.email[0]}
+                </p>
+              )}
+            </div>
+          )}
+
+          {type === 'OTHER' && (
+            <div className="rounded-xl border bg-muted/20 p-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Payment instructions
+                </h3>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Provide any payment instructions your customers should follow.
+                </p>
+              </div>
+
+              <Label htmlFor="payment-instructions">Payment instructions</Label>
+
+              <Textarea
+                id="payment-instructions"
+                value={otherDetails.instructions}
+                onChange={(event) => {
+                  setOtherDetails({
+                    instructions: event.target.value,
+                  });
+
+                  if (fieldErrors.details?.instructions) {
+                    setFieldErrors((current) => ({
+                      ...current,
+                      details: {
+                        ...current.details,
+                        instructions: undefined,
+                      },
+                    }));
+                  }
+                }}
+                placeholder="Enter any payment instructions your customers need."
+                rows={5}
+                disabled={isPending}
+                aria-invalid={Boolean(
+                  fieldErrors.details?.instructions?.length,
+                )}
+                className="my-3.5"
+              />
+
+              <p className="text-xs text-muted-foreground">
+                Provide the payment instructions customers should follow.
               </p>
-            )}
-          </div>
+
+              {fieldErrors.details?.instructions?.[0] && (
+                <p className="text-xs text-destructive">
+                  {fieldErrors.details.instructions[0]}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Default */}
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/20 p-4 transition-colors hover:bg-muted/40">
             <input
               type="checkbox"
               checked={isDefault}
@@ -264,11 +729,17 @@ export function AddPaymentMethodDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>
 
-          <Button type="button" onClick={handleSubmit} disabled={isPending}>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
             {isPending ? 'Adding...' : 'Add payment method'}
           </Button>
         </DialogFooter>

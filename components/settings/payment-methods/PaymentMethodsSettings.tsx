@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useState } from 'react';
 import { AddPaymentMethodDialog } from './AddPaymentMethodDialog';
 
+import type { Prisma } from '@/lib/db/generated/prisma/client';
+
 interface PaymentMethodsSettingsProps {
   paymentMethods: {
     id: string;
     name: string;
     type: string;
-    details: string;
+    details: Prisma.JsonValue;
     isDefault: boolean;
     createdAt: Date;
     updatedAt: Date;

@@ -2,35 +2,60 @@
 
 import { prisma } from '@/lib/db/prisma';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { paymentMethodSchema } from '@/lib/validators/paymentMethod';
+import {
+  paymentMethodSchema,
+  bankTransferDetailsSchema,
+  upiDetailsSchema,
+  paypalDetailsSchema,
+  wiseDetailsSchema,
+  otherDetailsSchema,
+} from '@/lib/validators/paymentMethod';
+
+type PaymentMethodDetailsFieldErrors = {
+  accountHolderName?: string[];
+  bankName?: string[];
+  accountNumber?: string[];
+  ifsc?: string[];
+  swift?: string[];
+  upiId?: string[];
+  email?: string[];
+  instructions?: string[];
+};
 
 type PaymentMethodFieldErrors = {
   name?: string[];
   type?: string[];
-  details?: string[];
+  details?: PaymentMethodDetailsFieldErrors;
   isDefault?: string[];
 };
 
 export async function createPaymentMethod(input: unknown) {
-  try {
-    const { user } = await requireAuthentication();
+  const { user } = await requireAuthentication();
 
+  try {
     const result = paymentMethodSchema.safeParse(input);
 
     if (!result.success) {
       const fieldErrors: PaymentMethodFieldErrors = {};
 
       for (const issue of result.error.issues) {
-        const field = issue.path[0];
+        const [field, detailField] = issue.path;
 
-        if (
-          field === 'name' ||
-          field === 'type' ||
-          field === 'details' ||
-          field === 'isDefault'
-        ) {
+        if (field === 'name' || field === 'type' || field === 'isDefault') {
           fieldErrors[field] ??= [];
           fieldErrors[field].push(issue.message);
+
+          continue;
+        }
+
+        if (field === 'details' && typeof detailField === 'string') {
+          fieldErrors.details ??= {};
+          fieldErrors.details[
+            detailField as keyof PaymentMethodDetailsFieldErrors
+          ] ??= [];
+          fieldErrors.details[
+            detailField as keyof PaymentMethodDetailsFieldErrors
+          ]!.push(issue.message);
         }
       }
 
@@ -42,6 +67,58 @@ export async function createPaymentMethod(input: unknown) {
     }
 
     const { name, type, details, isDefault } = result.data;
+
+    let detailsResult;
+
+    switch (type) {
+      case 'BANK_TRANSFER':
+        detailsResult = bankTransferDetailsSchema.safeParse(details);
+        break;
+
+      case 'UPI':
+        detailsResult = upiDetailsSchema.safeParse(details);
+        break;
+
+      case 'PAYPAL':
+        detailsResult = paypalDetailsSchema.safeParse(details);
+        break;
+
+      case 'WISE':
+        detailsResult = wiseDetailsSchema.safeParse(details);
+        break;
+
+      case 'OTHER':
+        detailsResult = otherDetailsSchema.safeParse(details);
+        break;
+    }
+
+    if (!detailsResult.success) {
+      const fieldErrors: PaymentMethodFieldErrors = {
+        details: {},
+      };
+
+      for (const issue of detailsResult.error.issues) {
+        const detailField = issue.path[0];
+
+        if (typeof detailField !== 'string') {
+          continue;
+        }
+
+        fieldErrors.details![
+          detailField as keyof PaymentMethodDetailsFieldErrors
+        ] ??= [];
+
+        fieldErrors.details![
+          detailField as keyof PaymentMethodDetailsFieldErrors
+        ]!.push(issue.message);
+      }
+
+      return {
+        success: false,
+        message: 'Please correct the highlighted fields.',
+        fieldErrors,
+      };
+    }
 
     const existingPaymentMethodCount = await prisma.paymentMethod.count({
       where: {
@@ -68,7 +145,7 @@ export async function createPaymentMethod(input: unknown) {
             userId: user.id,
             name,
             type,
-            details,
+            details: detailsResult.data,
             isDefault: true,
           },
         }),
@@ -79,7 +156,7 @@ export async function createPaymentMethod(input: unknown) {
           userId: user.id,
           name,
           type,
-          details,
+          details: detailsResult.data,
           isDefault: false,
         },
       });
@@ -89,7 +166,9 @@ export async function createPaymentMethod(input: unknown) {
       success: true,
       message: 'Payment method added successfully.',
     };
-  } catch {
+  } catch (error) {
+    console.error('createPaymentMethod error:', error);
+
     return {
       success: false,
       message: 'Something went wrong. Please try again.',
