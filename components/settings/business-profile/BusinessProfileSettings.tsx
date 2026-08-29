@@ -138,7 +138,7 @@ export function BusinessProfileSettings({
   };
 
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-3xl">
       <CardHeader>
         <div>
           <h2 className="text-base font-semibold text-foreground">
