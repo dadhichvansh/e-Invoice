@@ -7,6 +7,14 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PaymentMethodType {
+  BANK_TRANSFER
+  UPI
+  PAYPAL
+  WISE
+  OTHER
+}
+
 model User {
   id String @id @default(uuid())
 
@@ -20,6 +28,7 @@ model User {
   sessions                 Session[]
   emailChangeVerifications EmailChangeVerification[]
   businessProfile          BusinessProfile?
+  paymentMethods           PaymentMethod[]
 
   @@map("users")
 }
@@ -80,4 +89,23 @@ model BusinessProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("business_profiles")
+}
+
+model PaymentMethod {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  name    String
+  type    PaymentMethodType
+  details String
+
+  isDefault Boolean @default(false) @map("is_default")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("payment_methods")
 }
