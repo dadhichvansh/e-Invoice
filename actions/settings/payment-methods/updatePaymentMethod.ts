@@ -23,50 +23,67 @@ type PaymentMethodDetailsFieldErrors = {
 };
 
 type PaymentMethodFieldErrors = {
+  id?: string[];
   name?: string[];
   type?: string[];
   details?: PaymentMethodDetailsFieldErrors;
   isDefault?: string[];
 };
 
-export async function createPaymentMethod(input: unknown) {
+export async function updatePaymentMethod(input: unknown) {
   const { user } = await requireAuthentication();
 
   try {
-    const result = paymentMethodSchema.safeParse(input);
+    const result = paymentMethodSchema
+      .extend({
+        id: paymentMethodSchema.shape.name.transform(() => '').optional(),
+      })
+      .safeParse(input);
 
     if (!result.success) {
-      const fieldErrors: PaymentMethodFieldErrors = {};
-
-      for (const issue of result.error.issues) {
-        const [field, detailField] = issue.path;
-
-        if (field === 'name' || field === 'type' || field === 'isDefault') {
-          fieldErrors[field] ??= [];
-          fieldErrors[field].push(issue.message);
-
-          continue;
-        }
-
-        if (field === 'details' && typeof detailField === 'string') {
-          fieldErrors.details ??= {};
-          fieldErrors.details[
-            detailField as keyof PaymentMethodDetailsFieldErrors
-          ] ??= [];
-          fieldErrors.details[
-            detailField as keyof PaymentMethodDetailsFieldErrors
-          ]!.push(issue.message);
-        }
-      }
-
       return {
         success: false,
         message: 'Please correct the highlighted fields.',
-        fieldErrors,
+        fieldErrors: {},
       };
     }
 
     const { name, type, details, isDefault } = result.data;
+
+    const paymentMethodId =
+      typeof input === 'object' &&
+      input !== null &&
+      'id' in input &&
+      typeof input.id === 'string'
+        ? input.id
+        : '';
+
+    if (!paymentMethodId) {
+      return {
+        success: false,
+        message: 'Payment method not found.',
+        fieldErrors: {
+          id: ['Payment method ID is required.'],
+        },
+      };
+    }
+
+    const existingPaymentMethod = await prisma.paymentMethod.findFirst({
+      where: {
+        id: paymentMethodId,
+        userId: user.id,
+      },
+    });
+
+    if (!existingPaymentMethod) {
+      return {
+        success: false,
+        message: 'Payment method not found.',
+        fieldErrors: {
+          id: ['Payment method not found.'],
+        },
+      };
+    }
 
     let detailsResult;
 
@@ -120,13 +137,7 @@ export async function createPaymentMethod(input: unknown) {
       };
     }
 
-    const existingPaymentMethodCount = await prisma.paymentMethod.count({
-      where: {
-        userId: user.id,
-      },
-    });
-
-    const shouldBeDefault = existingPaymentMethodCount === 0 || isDefault;
+    const shouldBeDefault = isDefault || existingPaymentMethod.isDefault;
 
     if (shouldBeDefault) {
       await prisma.$transaction([
@@ -134,15 +145,20 @@ export async function createPaymentMethod(input: unknown) {
           where: {
             userId: user.id,
             isDefault: true,
+            id: {
+              not: paymentMethodId,
+            },
           },
           data: {
             isDefault: false,
           },
         }),
 
-        prisma.paymentMethod.create({
+        prisma.paymentMethod.update({
+          where: {
+            id: paymentMethodId,
+          },
           data: {
-            userId: user.id,
             name,
             type,
             details: detailsResult.data,
@@ -151,9 +167,11 @@ export async function createPaymentMethod(input: unknown) {
         }),
       ]);
     } else {
-      await prisma.paymentMethod.create({
+      await prisma.paymentMethod.update({
+        where: {
+          id: paymentMethodId,
+        },
         data: {
-          userId: user.id,
           name,
           type,
           details: detailsResult.data,
@@ -164,9 +182,11 @@ export async function createPaymentMethod(input: unknown) {
 
     return {
       success: true,
-      message: 'Payment method added successfully.',
+      message: 'Payment method updated successfully.',
     };
-  } catch {
+  } catch (error) {
+    console.error('updatePaymentMethod error:', error);
+
     return {
       success: false,
       message: 'Something went wrong. Please try again.',

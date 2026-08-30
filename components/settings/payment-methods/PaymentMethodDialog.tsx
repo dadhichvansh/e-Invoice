@@ -23,13 +23,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
+import { Prisma } from '@/lib/db/generated/prisma/client';
+
 import { createPaymentMethod } from '@/actions/settings/payment-methods/createPaymentMethod';
+import { updatePaymentMethod } from '@/actions/settings/payment-methods/updatePaymentMethod';
 
-type PaymentMethodType = 'BANK_TRANSFER' | 'UPI' | 'PAYPAL' | 'WISE' | 'OTHER';
+import type { PaymentMethodType } from '@/types/payment-method';
+import { useRouter } from 'next/navigation';
 
-interface AddPaymentMethodDialogProps {
+interface PaymentMethodToEdit {
+  id: string;
+  name: string;
+  type: PaymentMethodType;
+  details: Prisma.JsonValue;
+  isDefault: boolean;
+}
+
+interface PaymentMethodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  paymentMethod?: PaymentMethodToEdit | null;
 }
 
 const paymentMethodTypes: {
@@ -58,32 +71,86 @@ const paymentMethodTypes: {
   },
 ];
 
-export function AddPaymentMethodDialog({
+function getInitialFormState(paymentMethod?: PaymentMethodToEdit | null) {
+  const details = paymentMethod?.details;
+
+  const isObject =
+    typeof details === 'object' && details !== null && !Array.isArray(details);
+
+  return {
+    name: paymentMethod?.name ?? '',
+    type: paymentMethod?.type ?? 'BANK_TRANSFER',
+    isDefault: paymentMethod?.isDefault ?? false,
+
+    bankTransferDetails: {
+      accountHolderName:
+        isObject && typeof details.accountHolderName === 'string'
+          ? details.accountHolderName
+          : '',
+      bankName:
+        isObject && typeof details.bankName === 'string'
+          ? details.bankName
+          : '',
+      accountNumber:
+        isObject && typeof details.accountNumber === 'string'
+          ? details.accountNumber
+          : '',
+      ifsc: isObject && typeof details.ifsc === 'string' ? details.ifsc : '',
+      swift: isObject && typeof details.swift === 'string' ? details.swift : '',
+    },
+
+    upiDetails: {
+      upiId: isObject && typeof details.upiId === 'string' ? details.upiId : '',
+    },
+
+    paypalDetails: {
+      email: isObject && typeof details.email === 'string' ? details.email : '',
+    },
+
+    wiseDetails: {
+      email: isObject && typeof details.email === 'string' ? details.email : '',
+    },
+
+    otherDetails: {
+      instructions:
+        isObject && typeof details.instructions === 'string'
+          ? details.instructions
+          : '',
+    },
+  };
+}
+
+export function PaymentMethodDialog({
   open,
   onOpenChange,
-}: AddPaymentMethodDialogProps) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState<PaymentMethodType>('BANK_TRANSFER');
-  const [bankTransferDetails, setBankTransferDetails] = useState({
-    accountHolderName: '',
-    bankName: '',
-    accountNumber: '',
-    ifsc: '',
-    swift: '',
-  });
-  const [upiDetails, setUpiDetails] = useState({
-    upiId: '',
-  });
-  const [paypalDetails, setPaypalDetails] = useState({
-    email: '',
-  });
-  const [wiseDetails, setWiseDetails] = useState({
-    email: '',
-  });
-  const [otherDetails, setOtherDetails] = useState({
-    instructions: '',
-  });
-  const [isDefault, setIsDefault] = useState(false);
+  paymentMethod,
+}: PaymentMethodDialogProps) {
+  const router = useRouter();
+
+  const initialFormState = getInitialFormState(paymentMethod);
+
+  const [name, setName] = useState(initialFormState.name);
+
+  const [type, setType] = useState<PaymentMethodType>(initialFormState.type);
+
+  const [bankTransferDetails, setBankTransferDetails] = useState(
+    initialFormState.bankTransferDetails,
+  );
+
+  const [upiDetails, setUpiDetails] = useState(initialFormState.upiDetails);
+
+  const [paypalDetails, setPaypalDetails] = useState(
+    initialFormState.paypalDetails,
+  );
+
+  const [wiseDetails, setWiseDetails] = useState(initialFormState.wiseDetails);
+
+  const [otherDetails, setOtherDetails] = useState(
+    initialFormState.otherDetails,
+  );
+
+  const [isDefault, setIsDefault] = useState(initialFormState.isDefault);
+
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string[];
     type?: string[];
@@ -101,38 +168,6 @@ export function AddPaymentMethodDialog({
   }>({});
 
   const [isPending, startTransition] = useTransition();
-
-  const resetForm = () => {
-    setName('');
-    setType('BANK_TRANSFER');
-
-    setBankTransferDetails({
-      accountHolderName: '',
-      bankName: '',
-      accountNumber: '',
-      ifsc: '',
-      swift: '',
-    });
-
-    setUpiDetails({
-      upiId: '',
-    });
-
-    setPaypalDetails({
-      email: '',
-    });
-
-    setWiseDetails({
-      email: '',
-    });
-
-    setOtherDetails({
-      instructions: '',
-    });
-
-    setIsDefault(false);
-    setFieldErrors({});
-  };
 
   const handleSubmit = () => {
     setFieldErrors({});
@@ -178,12 +213,20 @@ export function AddPaymentMethodDialog({
     }
 
     startTransition(async () => {
-      const result = await createPaymentMethod({
-        name,
-        type,
-        details,
-        isDefault,
-      });
+      const result = paymentMethod
+        ? await updatePaymentMethod({
+            id: paymentMethod.id,
+            name,
+            type,
+            details,
+            isDefault,
+          })
+        : await createPaymentMethod({
+            name,
+            type,
+            details,
+            isDefault,
+          });
 
       if (!result.success) {
         setFieldErrors(result.fieldErrors ?? {});
@@ -193,26 +236,22 @@ export function AddPaymentMethodDialog({
 
       toast.success(result.message);
       onOpenChange(false);
+      router.refresh();
     });
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          resetForm();
-        }
-
-        onOpenChange(nextOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add payment method</DialogTitle>
+          <DialogTitle>
+            {paymentMethod ? 'Edit payment method' : 'Add payment method'}
+          </DialogTitle>
 
           <DialogDescription>
-            Add payment instructions that can be shown on your invoices.
+            {paymentMethod
+              ? 'Update the payment instructions shown on your invoices.'
+              : 'Add payment instructions that can be shown on your invoices.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -740,7 +779,13 @@ export function AddPaymentMethodDialog({
             disabled={isPending}
             className="w-full sm:w-auto"
           >
-            {isPending ? 'Adding...' : 'Add payment method'}
+            {isPending
+              ? paymentMethod
+                ? 'Saving...'
+                : 'Adding...'
+              : paymentMethod
+                ? 'Save changes'
+                : 'Add payment method'}
           </Button>
         </DialogFooter>
       </DialogContent>
