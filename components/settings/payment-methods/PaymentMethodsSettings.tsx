@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
+
 import {
   Building2,
   CreditCard,
@@ -8,6 +10,7 @@ import {
   Mail,
   Pencil,
   Plus,
+  Trash2,
   WalletCards,
 } from 'lucide-react';
 
@@ -16,9 +19,20 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 import { PaymentMethodDialog } from './PaymentMethodDialog';
+import type { PaymentMethodType } from '@/types/payment-method';
 
 import type { Prisma } from '@/lib/db/generated/prisma/client';
-import type { PaymentMethodType } from '@/types/payment-method';
+
+import { deletePaymentMethod } from '@/actions/settings/payment-methods/deletePaymentMethod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useRouter } from 'next/navigation';
 
 interface PaymentMethodsSettingsProps {
   paymentMethods: {
@@ -82,6 +96,11 @@ function PaymentMethodDetails({
 
   switch (type) {
     case 'BANK_TRANSFER': {
+      const accountHolderName =
+        typeof details.accountHolderName === 'string'
+          ? details.accountHolderName
+          : null;
+
       const bankName =
         typeof details.bankName === 'string' ? details.bankName : null;
 
@@ -96,6 +115,17 @@ function PaymentMethodDetails({
 
       return (
         <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+          {accountHolderName && (
+            <div>
+              <p className="text-xs text-muted-foreground">
+                Account holder name
+              </p>
+              <p className="mt-0.5 text-sm font-medium text-foreground">
+                {accountHolderName}
+              </p>
+            </div>
+          )}
+
           {bankName && (
             <div>
               <p className="text-xs text-muted-foreground">Bank</p>
@@ -191,10 +221,42 @@ function PaymentMethodDetails({
 export function PaymentMethodsSettings({
   paymentMethods,
 }: PaymentMethodsSettingsProps) {
+  const router = useRouter();
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
   const [paymentMethodToEdit, setPaymentMethodToEdit] = useState<
     PaymentMethodsSettingsProps['paymentMethods'][number] | null
   >(null);
+
+  const [paymentMethodToDelete, setPaymentMethodToDelete] = useState<
+    PaymentMethodsSettingsProps['paymentMethods'][number] | null
+  >(null);
+
+  const [isDeletePending, startDeleteTransition] = useTransition();
+
+  const handleDelete = () => {
+    if (!paymentMethodToDelete) {
+      return;
+    }
+
+    const paymentMethodId = paymentMethodToDelete.id;
+
+    startDeleteTransition(async () => {
+      const result = await deletePaymentMethod({
+        id: paymentMethodId,
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+      setPaymentMethodToDelete(null);
+      router.refresh();
+    });
+  };
 
   return (
     <>
@@ -258,7 +320,7 @@ export function PaymentMethodsSettings({
 
                       {/* Content */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="wrap-break-word text-sm font-semibold text-foreground">
@@ -281,19 +343,35 @@ export function PaymentMethodsSettings({
                             </p>
                           </div>
 
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="shrink-0"
-                            onClick={() => {
-                              setPaymentMethodToEdit(paymentMethod);
-                              setIsAddDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="size-3.5" />
-                            Edit
-                          </Button>
+                          {/* Actions */}
+                          <div className="flex shrink-0 gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPaymentMethodToEdit(paymentMethod);
+                                setIsAddDialogOpen(true);
+                              }}
+                              disabled={isDeletePending}
+                            >
+                              <Pencil className="size-3.5" />
+                              Edit
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPaymentMethodToDelete(paymentMethod);
+                              }}
+                              disabled={isDeletePending}
+                            >
+                              <Trash2 className="size-3.5" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="mt-4 border-t pt-4">
@@ -323,6 +401,51 @@ export function PaymentMethodsSettings({
         }}
         paymentMethod={paymentMethodToEdit}
       />
+
+      <Dialog
+        open={Boolean(paymentMethodToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletePending) {
+            setPaymentMethodToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete payment method?</DialogTitle>
+
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-foreground">
+                {paymentMethodToDelete?.name}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPaymentMethodToDelete(null)}
+              disabled={isDeletePending}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeletePending}
+              className="w-full sm:w-auto"
+            >
+              {isDeletePending ? 'Deleting...' : 'Delete payment method'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
