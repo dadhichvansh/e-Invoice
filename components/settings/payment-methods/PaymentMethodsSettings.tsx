@@ -2,22 +2,20 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { toast } from 'sonner';
 import { Plus, WalletCards } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-import type { Prisma } from '@/lib/db/generated/prisma/client';
-
-import { deletePaymentMethod } from '@/actions/settings/payment-methods/deletePaymentMethod';
-
-import type { PaymentMethodType } from '@/types/payment-method';
-
 import { PaymentMethodDialog } from './PaymentMethodDialog';
 import { PaymentMethodCard } from './PaymentMethodCard';
 import { DeletePaymentMethodDialog } from './DeletePaymentMethodDialog';
+
+import type { PaymentMethodType } from '@/types/payment-method';
+import type { Prisma } from '@/lib/db/generated/prisma/client';
+
+import { deletePaymentMethod } from '@/actions/settings/payment-methods/deletePaymentMethod';
 
 interface PaymentMethodsSettingsProps {
   paymentMethods: {

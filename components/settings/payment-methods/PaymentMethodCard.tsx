@@ -8,9 +8,11 @@ import {
   Trash2,
   WalletCards,
 } from 'lucide-react';
-import { PaymentMethodDetails } from './PaymentMethodDetails';
-import { PaymentMethodType } from '@/types/payment-method';
+
 import type { Prisma } from '@/lib/db/generated/prisma/client';
+import type { PaymentMethodType } from '@/types/payment-method';
+
+import { PaymentMethodDetails } from './PaymentMethodDetails';
 
 interface PaymentMethodCardProps {
   paymentMethod: {
@@ -59,7 +61,7 @@ export function PaymentMethodCard({
   disabled,
 }: PaymentMethodCardProps) {
   return (
-    <div className="rounded-xl border bg-background p-4 transition-colors hover:bg-muted/30 sm:p-5">
+    <div className="rounded-2xl border bg-background p-4 transition-colors hover:bg-muted/30 sm:p-5">
       <div className="flex gap-3 sm:gap-4">
         {/* Icon */}
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
@@ -68,7 +70,7 @@ export function PaymentMethodCard({
 
         {/* Content */}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="wrap-break-word text-sm font-semibold text-foreground">
@@ -82,7 +84,7 @@ export function PaymentMethodCard({
                 )}
               </div>
 
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {paymentMethodTypeLabels[paymentMethod.type] ??
                   paymentMethod.type}
               </p>

@@ -5,9 +5,6 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, MailCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { requestEmailChange } from '@/actions/settings/requestEmailChange';
-import { verifyEmailChange } from '@/actions/settings/verifyEmailChange';
-
 import {
   Dialog,
   DialogContent,
@@ -18,7 +15,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '../ui/input-otp';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../ui/input-otp';
+
+import { requestEmailChange } from '@/actions/settings/requestEmailChange';
+import { verifyEmailChange } from '@/actions/settings/verifyEmailChange';
 
 interface ChangeEmailDialogProps {
   currentEmail: string;

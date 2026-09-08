@@ -1,27 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { PaymentMethodsSettings } from '@/components/settings/payment-methods/PaymentMethodsSettings';
+import { AccountSettings } from '@/components/settings/account/AccountSettings';
 
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { prisma } from '@/lib/db/prisma';
 
-export default async function PaymentMethodsPage() {
+export default async function AccountSettingsPage() {
   const { user } = await requireAuthentication();
-
-  const paymentMethods = await prisma.paymentMethod.findMany({
-    where: {
-      userId: user.id,
-    },
-    orderBy: [
-      {
-        isDefault: 'desc',
-      },
-      {
-        createdAt: 'asc',
-      },
-    ],
-  });
 
   return (
     <main className="p-9">
@@ -36,15 +21,15 @@ export default async function PaymentMethodsPage() {
 
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Payment Methods
+            Account
           </h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage the payment methods shown on your invoices.
+            Manage your personal account information and security.
           </p>
         </div>
 
-        <PaymentMethodsSettings paymentMethods={paymentMethods} />
+        <AccountSettings name={user.name} email={user.email} />
       </div>
     </main>
   );

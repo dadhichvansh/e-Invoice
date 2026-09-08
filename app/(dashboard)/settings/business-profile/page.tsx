@@ -1,10 +1,10 @@
-import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { prisma } from '@/lib/db/prisma';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 import { BusinessProfileSettings } from '@/components/settings/business-profile/BusinessProfileSettings';
 
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
+import { prisma } from '@/lib/db/prisma';
 
 export default async function BusinessProfilePage() {
   const { user } = await requireAuthentication();
@@ -17,7 +17,7 @@ export default async function BusinessProfilePage() {
 
   return (
     <main className="p-9">
-      <div className="w-full space-y-7">
+      <div className="w-full space-y-5">
         <Link
           href="/settings"
           className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
