@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { ChangeEmailDialog } from './ChangeEmailDialog';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 
-import { updateName } from '@/actions/settings/updateName';
+import { updateName } from '@/actions/settings/account/updateName';
 
 interface AccountSettingsProps {
   name: string;

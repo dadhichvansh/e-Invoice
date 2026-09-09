@@ -6,7 +6,7 @@ import { RecentInvoices } from '@/components/dashboard/RecentInvoices';
 export default function DashboardPage() {
   return (
     <main className="p-9">
-      <div className="space-y-7">
+      <div className="space-y-5">
         <OverviewHeader />
         <DashboardStats />
         <RevenueOverview />

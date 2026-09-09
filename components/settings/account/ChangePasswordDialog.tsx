@@ -5,7 +5,7 @@ import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { updatePassword } from '@/actions/settings/updatePassword';
+import { updatePassword } from '@/actions/settings/account/updatePassword';
 import {
   Dialog,
   DialogContent,

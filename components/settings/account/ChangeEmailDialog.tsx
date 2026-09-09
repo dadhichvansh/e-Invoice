@@ -17,8 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../ui/input-otp';
 
-import { requestEmailChange } from '@/actions/settings/requestEmailChange';
-import { verifyEmailChange } from '@/actions/settings/verifyEmailChange';
+import { requestEmailChange } from '@/actions/settings/account/requestEmailChange';
+import { verifyEmailChange } from '@/actions/settings/account/verifyEmailChange';
 
 interface ChangeEmailDialogProps {
   currentEmail: string;

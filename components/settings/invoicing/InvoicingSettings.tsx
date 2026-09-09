@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 
 import { InvoiceDefaults } from './InvoiceDefaults';
 import { InvoiceCategories } from './InvoiceCategories';
 import { DefaultInvoiceNotes } from './DefaultInvoiceNotes';
+
+import { updateInvoicingSettings } from '@/actions/settings/invoicing/invoicingSettings';
 
 interface InvoicingSettingsProps {
   settings: {
@@ -53,15 +56,44 @@ export function InvoicingSettings({
   settings,
   categories,
 }: InvoicingSettingsProps) {
-  const [formData, setFormData] = useState<InvoicingFormData>(
-    getInitialFormData(settings),
-  );
+  const initialFormData = getInitialFormData(settings);
+
+  const [formData, setFormData] = useState<InvoicingFormData>(initialFormData);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const hasChanges =
+    formData.invoicePrefix !== initialFormData.invoicePrefix ||
+    formData.defaultCurrency !== initialFormData.defaultCurrency ||
+    formData.defaultPaymentTerms !== initialFormData.defaultPaymentTerms ||
+    formData.defaultNotes !== initialFormData.defaultNotes;
 
   const handleChange = (field: keyof InvoicingFormData, value: string) => {
     setFormData((current) => ({
       ...current,
       [field]: value,
     }));
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+
+    try {
+      const result = await updateInvoicingSettings({
+        invoicePrefix: formData.invoicePrefix,
+        defaultCurrency: formData.defaultCurrency,
+        defaultPaymentTerms: Number(formData.defaultPaymentTerms),
+        defaultNotes: formData.defaultNotes,
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -87,8 +119,13 @@ export function InvoicingSettings({
 
       {/* Actions */}
       <div className="flex justify-end">
-        <Button type="button" className="w-full sm:w-auto" disabled>
-          Save changes
+        <Button
+          type="button"
+          className="w-full sm:w-auto"
+          onClick={handleSaveChanges}
+          disabled={isSaving || !hasChanges}
+        >
+          {isSaving ? 'Saving...' : 'Save changes'}
         </Button>
       </div>
     </div>
