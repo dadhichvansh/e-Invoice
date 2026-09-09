@@ -29,6 +29,8 @@ model User {
   emailChangeVerifications EmailChangeVerification[]
   businessProfile          BusinessProfile?
   paymentMethods           PaymentMethod[]
+  invoicingSettings        InvoicingSettings?
+  invoiceCategories        InvoiceCategory[]
 
   @@map("users")
 }
@@ -108,4 +110,42 @@ model PaymentMethod {
 
   @@index([userId])
   @@map("payment_methods")
+}
+
+model InvoicingSettings {
+  id String @id @default(uuid())
+
+  userId String @unique @map("user_id")
+
+  invoicePrefix       String? @map("invoice_prefix")
+  defaultCurrency     String? @map("default_currency")
+  defaultPaymentTerms Int?    @map("default_payment_terms")
+  defaultNotes        String? @map("default_notes")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("invoicing_settings")
+}
+
+model InvoiceCategory {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  name        String
+  code        String
+  description String?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@index([userId])
+  @@map("invoice_categories")
 }

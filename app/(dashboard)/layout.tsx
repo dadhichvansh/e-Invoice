@@ -1,4 +1,5 @@
 import { Shell } from '@/components/layout/Shell';
+
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
 
 export default async function Layout({
