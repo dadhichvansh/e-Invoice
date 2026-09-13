@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, PanelLeft, Sparkles, X } from 'lucide-react';
+import { PanelLeft, Sparkles } from 'lucide-react';
 
 import { LogoutButton } from '@/components/authentication/LogoutButton';
 import { Navigation } from './Navigation';

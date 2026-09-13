@@ -11,14 +11,14 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
-    label: 'Invoices',
-    href: '/invoices',
-    icon: FileText,
-  },
-  {
     label: 'Clients',
     href: '/clients',
     icon: Users,
+  },
+  {
+    label: 'Invoices',
+    href: '/invoices',
+    icon: FileText,
   },
   {
     label: 'Settings',
