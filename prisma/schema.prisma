@@ -31,6 +31,7 @@ model User {
   paymentMethods           PaymentMethod[]
   invoicingSettings        InvoicingSettings?
   invoiceCategories        InvoiceCategory[]
+  clients                  Client[]
 
   @@map("users")
 }
@@ -148,4 +149,29 @@ model InvoiceCategory {
   @@unique([userId, code])
   @@index([userId])
   @@map("invoice_categories")
+}
+
+model Client {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  name       String
+  email      String
+  company    String?
+  phone      String?
+  address    String?
+  city       String?
+  state      String?
+  postalCode String? @map("postal_code")
+  country    String?
+  website    String?
+  notes      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("clients")
 }
