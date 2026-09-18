@@ -3,7 +3,7 @@ import { SettingsNavigation } from '@/components/settings/SettingsNavigation';
 export default async function SettingsPage() {
   return (
     <main className="p-9">
-      <div className="w-full space-y-7">
+      <div className="w-full space-y-5">
         {/* Settings header */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">

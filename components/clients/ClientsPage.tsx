@@ -55,40 +55,42 @@ export function ClientsPage({ clients }: ClientsPageProps) {
     });
   }, [clients, searchQuery]);
 
+  const isSearching = searchQuery.trim().length > 0;
+
   return (
     <main className="p-9">
       <div className="w-full space-y-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight">Clients</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Clients
+          </h1>
 
-            <p className="text-sm text-muted-foreground">
-              Manage your clients and their contact details.
-            </p>
-          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage your clients and their contact details.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {clients.length} {clients.length === 1 ? 'client' : 'clients'}
+        </p>
+
+        <div className="w-full max-w-sm flex gap-2 items-center mb-4">
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search clients..."
+            aria-label="Search clients"
+          />
 
           <Link href="/clients/new">
             <Button>Add client</Button>
           </Link>
         </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-          </p>
-
-          <div className="w-full max-w-sm">
-            <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search clients..."
-              aria-label="Search clients"
-            />
-          </div>
-        </div>
-
-        <ClientTable clients={filteredClients} />
       </div>
+
+      <ClientTable clients={filteredClients} isSearching={isSearching} />
     </main>
   );
 }

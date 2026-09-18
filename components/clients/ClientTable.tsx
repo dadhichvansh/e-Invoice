@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
 import { DeleteClientDialog } from './DeleteClientDialog';
 
 type Client = {
@@ -35,24 +36,31 @@ type Client = {
 
 type ClientTableProps = {
   clients: Client[];
+  isSearching: boolean;
 };
 
-export function ClientTable({ clients }: ClientTableProps) {
+export function ClientTable({ clients, isSearching }: ClientTableProps) {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
   if (clients.length === 0) {
     return (
       <div className="rounded-lg border">
         <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-6 text-center">
-          <p className="text-sm font-medium">No clients found.</p>
-
-          <p className="text-sm text-muted-foreground">
-            Add a client to start managing your clients.
+          <p className="text-sm font-medium">
+            {isSearching ? 'No clients match your search.' : 'No clients yet.'}
           </p>
 
-          <Link href="/clients/new">
-            <Button>Add client</Button>
-          </Link>
+          <p className="text-sm text-muted-foreground">
+            {isSearching
+              ? 'Try a different search term.'
+              : 'Add your first client to get started.'}
+          </p>
+
+          {!isSearching && (
+            <Link href="/clients/new">
+              <Button>Add client</Button>
+            </Link>
+          )}
         </div>
       </div>
     );
