@@ -15,24 +15,25 @@ interface InvoiceDefaultsProps {
     defaultCurrency: string;
     defaultPaymentTerms: string;
   };
+
+  currencies: {
+    id: string;
+    code: string;
+    name: string;
+    symbol: string;
+  }[];
+
   onChange: (
     field: 'invoicePrefix' | 'defaultCurrency' | 'defaultPaymentTerms',
     value: string,
   ) => void;
 }
 
-const currencies = [
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' },
-] as const;
-
-export function InvoiceDefaults({ data, onChange }: InvoiceDefaultsProps) {
+export function InvoiceDefaults({
+  data,
+  currencies,
+  onChange,
+}: InvoiceDefaultsProps) {
   return (
     <Card className="rounded-3xl">
       <CardHeader>
@@ -78,9 +79,16 @@ export function InvoiceDefaults({ data, onChange }: InvoiceDefaultsProps) {
                   onChange('defaultCurrency', value);
                 }
               }}
+              disabled={currencies.length === 0}
             >
-              <SelectTrigger id="default-currency" className={'w-full'}>
-                <SelectValue placeholder="Select currency" />
+              <SelectTrigger id="default-currency" className="w-full">
+                <SelectValue
+                  placeholder={
+                    currencies.length === 0
+                      ? 'No currencies available'
+                      : 'Select currency'
+                  }
+                />
               </SelectTrigger>
 
               <SelectContent
@@ -89,9 +97,10 @@ export function InvoiceDefaults({ data, onChange }: InvoiceDefaultsProps) {
                 sideOffset={4}
               >
                 {currencies.map((currency) => (
-                  <SelectItem key={currency.code} value={currency.code}>
+                  <SelectItem key={currency.id} value={currency.code}>
                     <span className="flex items-center gap-2">
                       <span className="w-5 text-center">{currency.symbol}</span>
+
                       <span>
                         {currency.code} — {currency.name}
                       </span>
@@ -101,9 +110,16 @@ export function InvoiceDefaults({ data, onChange }: InvoiceDefaultsProps) {
               </SelectContent>
             </Select>
 
-            <p className="text-xs text-muted-foreground">
-              Used as the default currency for new invoices.
-            </p>
+            {currencies.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Add at least one currency in the Currencies section before
+                selecting a default currency.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Used as the default currency for new invoices.
+              </p>
+            )}
           </div>
 
           {/* Payment terms */}

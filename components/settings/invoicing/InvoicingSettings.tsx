@@ -10,6 +10,7 @@ import { InvoiceCategories } from './InvoiceCategories';
 import { DefaultInvoiceNotes } from './DefaultInvoiceNotes';
 
 import { updateInvoicingSettings } from '@/actions/settings/invoicing/invoicingSettings';
+import { CurrencySettings } from './CurrencySettings';
 
 interface InvoicingSettingsProps {
   settings: {
@@ -27,6 +28,13 @@ interface InvoicingSettingsProps {
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
+  }[];
+
+  currencies: {
+    id: string;
+    symbol: string;
+    code: string;
+    name: string;
   }[];
 }
 
@@ -55,6 +63,7 @@ function getInitialFormData(
 export function InvoicingSettings({
   settings,
   categories,
+  currencies,
 }: InvoicingSettingsProps) {
   const initialFormData = getInitialFormData(settings);
 
@@ -106,10 +115,14 @@ export function InvoicingSettings({
           defaultPaymentTerms: formData.defaultPaymentTerms,
         }}
         onChange={handleChange}
+        currencies={currencies}
       />
 
       {/* Invoice categories */}
       <InvoiceCategories categories={categories} />
+
+      {/* Currency settings */}
+      <CurrencySettings currencies={currencies} />
 
       {/* Default invoice notes */}
       <DefaultInvoiceNotes

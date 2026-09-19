@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db/prisma';
 export default async function InvoicingSettingsPage() {
   const { user } = await requireAuthentication();
 
-  const [settings, categories] = await Promise.all([
+  const [settings, categories, currencies] = await Promise.all([
     prisma.invoicingSettings.findUnique({
       where: {
         userId: user.id,
@@ -23,6 +23,15 @@ export default async function InvoicingSettingsPage() {
       },
       orderBy: {
         createdAt: 'asc',
+      },
+    }),
+
+    prisma.currency.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        name: 'asc',
       },
     }),
   ]);
@@ -48,7 +57,11 @@ export default async function InvoicingSettingsPage() {
           </p>
         </div>
 
-        <InvoicingSettings settings={settings} categories={categories} />
+        <InvoicingSettings
+          settings={settings}
+          categories={categories}
+          currencies={currencies}
+        />
       </div>
     </main>
   );
