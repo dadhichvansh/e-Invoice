@@ -26,11 +26,11 @@ type Client = {
   updatedAt: Date;
 };
 
-type ClientsPageProps = {
+type ClientsProps = {
   clients: Client[];
 };
 
-export function ClientsPage({ clients }: ClientsPageProps) {
+export function Clients({ clients }: ClientsProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredClients = useMemo(() => {
@@ -71,12 +71,12 @@ export function ClientsPage({ clients }: ClientsPageProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="whitespace-nowrap text-sm text-muted-foreground">
           {clients.length} {clients.length === 1 ? 'client' : 'clients'}
         </p>
 
-        <div className="w-full max-w-sm flex gap-2 items-center mb-4">
+        <div className="flex w-full gap-2 sm:max-w-sm">
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -84,7 +84,7 @@ export function ClientsPage({ clients }: ClientsPageProps) {
             aria-label="Search clients"
           />
 
-          <Link href="/clients/new">
+          <Link href="/clients/new" className="shrink-0">
             <Button>Add client</Button>
           </Link>
         </div>

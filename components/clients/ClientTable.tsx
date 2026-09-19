@@ -44,7 +44,7 @@ export function ClientTable({ clients, isSearching }: ClientTableProps) {
 
   if (clients.length === 0) {
     return (
-      <div className="rounded-lg border">
+      <div className="mt-4 rounded-lg border">
         <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-6 text-center">
           <p className="text-sm font-medium">
             {isSearching ? 'No clients match your search.' : 'No clients yet.'}

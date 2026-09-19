@@ -1,9 +1,9 @@
-import { ClientsPage } from '@/components/clients/ClientsPage';
+import { Clients } from '@/components/clients/Clients';
 
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
 import { prisma } from '@/lib/db/prisma';
 
-export default async function ClientsRoute() {
+export default async function ClientsPage() {
   const { user } = await requireAuthentication();
 
   const clients = await prisma.client.findMany({
@@ -15,5 +15,5 @@ export default async function ClientsRoute() {
     },
   });
 
-  return <ClientsPage clients={clients} />;
+  return <Clients clients={clients} />;
 }
