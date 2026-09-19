@@ -68,7 +68,7 @@ export function ClientTable({ clients, isSearching }: ClientTableProps) {
 
   return (
     <>
-      <div className="rounded-lg border">
+      <div className="mt-4 rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
