@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "seed:admin": "tsx scripts/seed-admin.ts",
-    "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate-deploy": "prisma migrate deploy"
+    "postinstall": "npx prisma generate",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:migrate-deploy": "npx prisma migrate deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

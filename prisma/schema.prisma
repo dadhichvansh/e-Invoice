@@ -7,14 +7,9 @@ datasource db {
   provider = "postgresql"
 }
 
-enum PaymentMethodType {
-  BANK_TRANSFER
-  UPI
-  PAYPAL
-  WISE
-  OTHER
-}
-
+/**
+ * User & authentication
+ */
 model User {
   id String @id @default(uuid())
 
@@ -32,6 +27,7 @@ model User {
   invoicingSettings        InvoicingSettings?
   invoiceCategories        InvoiceCategory[]
   clients                  Client[]
+  invoices                 Invoice[]
 
   @@map("users")
 }
@@ -71,6 +67,9 @@ model EmailChangeVerification {
   @@map("email_change_verifications")
 }
 
+/**
+ * Business profile
+ */
 model BusinessProfile {
   id     String @id @default(uuid())
   userId String @unique @map("user_id")
@@ -94,6 +93,17 @@ model BusinessProfile {
   @@map("business_profiles")
 }
 
+/**
+ * Payment methods
+ */
+enum PaymentMethodType {
+  BANK_TRANSFER
+  UPI
+  PAYPAL
+  WISE
+  OTHER
+}
+
 model PaymentMethod {
   id     String @id @default(uuid())
   userId String @map("user_id")
@@ -107,12 +117,16 @@ model PaymentMethod {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
 
   @@index([userId])
   @@map("payment_methods")
 }
 
+/**
+ * Invoicing settings
+ */
 model InvoicingSettings {
   id String @id @default(uuid())
 
@@ -131,6 +145,9 @@ model InvoicingSettings {
   @@map("invoicing_settings")
 }
 
+/**
+ * Invoice categories
+ */
 model InvoiceCategory {
   id     String @id @default(uuid())
   userId String @map("user_id")
@@ -144,13 +161,17 @@ model InvoiceCategory {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
 
   @@unique([userId, code])
   @@index([userId])
   @@map("invoice_categories")
 }
 
+/**
+ * Clients
+ */
 model Client {
   id     String @id @default(uuid())
   userId String @map("user_id")
@@ -171,9 +192,126 @@ model Client {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+  invoices Invoice[]
 
   @@unique([userId, slug])
   @@index([userId])
   @@map("clients")
+}
+
+/**
+ * Invoices
+ */
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Invoice {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  clientId          String? @map("client_id")
+  invoiceCategoryId String? @map("invoice_category_id")
+  paymentMethodId   String? @map("payment_method_id")
+
+  invoiceNumber String        @map("invoice_number")
+  status        InvoiceStatus @default(DRAFT)
+
+  invoiceDate DateTime @map("invoice_date")
+  dueDate     DateTime @map("due_date")
+
+  currency String
+
+  projectName        String? @map("project_name")
+  projectDescription String? @map("project_description")
+
+  discountPercentage Decimal @default(0) @map("discount_percentage")
+
+  paymentReference String? @map("payment_reference")
+
+  notes String?
+  terms String?
+
+  subtotal       Decimal @default(0)
+  discountAmount Decimal @default(0) @map("discount_amount")
+  grandTotal     Decimal @default(0) @map("grand_total")
+
+  /**
+   * Client snapshot
+   * Preserves the client's billing information as it existed
+   * when the invoice was created.
+   */
+  clientName       String  @map("client_name")
+  clientEmail      String  @map("client_email")
+  clientCompany    String? @map("client_company")
+  clientPhone      String? @map("client_phone")
+  clientAddress    String? @map("client_address")
+  clientCity       String? @map("client_city")
+  clientState      String? @map("client_state")
+  clientPostalCode String? @map("client_postal_code")
+  clientCountry    String? @map("client_country")
+
+  /**
+   * Payment Method Snapshot
+   * Preserves the payment method information used by the
+   * invoice even if the original payment method is modified
+   * or deleted later.
+   */
+  paymentMethodName    String?            @map("payment_method_name")
+  paymentMethodType    PaymentMethodType? @map("payment_method_type")
+  paymentMethodDetails Json?              @map("payment_method_details")
+
+  /**
+   * Invoice Category Snapshot
+   * Preserves the category information used by the invoice
+   * even if the original category is modified later.
+   */
+  invoiceCategoryName String? @map("invoice_category_name")
+  invoiceCategoryCode String? @map("invoice_category_code")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client          Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  invoiceCategory InvoiceCategory? @relation(fields: [invoiceCategoryId], references: [id], onDelete: SetNull)
+  paymentMethod   PaymentMethod?   @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+
+  items InvoiceItem[]
+
+  @@unique([userId, invoiceNumber])
+  @@index([userId])
+  @@index([clientId])
+  @@index([invoiceCategoryId])
+  @@index([paymentMethodId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@map("invoices")
+}
+
+/**
+ * Invoice items
+ */
+model InvoiceItem {
+  id        String @id @default(uuid())
+  invoiceId String @map("invoice_id")
+
+  description String
+  quantity    Decimal
+  rate        Decimal
+  amount      Decimal
+
+  sortOrder Int @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
 }
