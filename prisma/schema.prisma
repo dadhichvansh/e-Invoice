@@ -26,6 +26,7 @@ model User {
   paymentMethods           PaymentMethod[]
   invoicingSettings        InvoicingSettings?
   invoiceCategories        InvoiceCategory[]
+  currencies               Currency[]
   clients                  Client[]
   invoices                 Invoice[]
 
@@ -170,6 +171,27 @@ model InvoiceCategory {
 }
 
 /**
+ * Currencies
+ */
+model Currency {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+
+  code   String
+  name   String
+  symbol String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@index([userId])
+  @@map("currencies")
+}
+
+/**
  * Clients
  */
 model Client {
@@ -213,6 +235,7 @@ enum InvoiceStatus {
 model Invoice {
   id     String @id @default(uuid())
   userId String @map("user_id")
+  slug   String
 
   clientId          String? @map("client_id")
   invoiceCategoryId String? @map("invoice_category_id")
@@ -284,6 +307,7 @@ model Invoice {
   items InvoiceItem[]
 
   @@unique([userId, invoiceNumber])
+  @@unique([userId, slug])
   @@index([userId])
   @@index([clientId])
   @@index([invoiceCategoryId])
