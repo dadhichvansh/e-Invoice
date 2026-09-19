@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -100,11 +100,13 @@ export function ClientTable({ clients, isSearching }: ClientTableProps) {
 
                   <TableCell>
                     <div className="space-y-1">
-                      <div>{client.email}</div>
+                      <div className="flex items-center gap-1.5">
+                        <Mail size={13} /> {client.email}
+                      </div>
 
                       {client.phone && (
-                        <div className="text-sm text-muted-foreground">
-                          {client.phone}
+                        <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                          <Phone size={13} /> {client.phone}
                         </div>
                       )}
                     </div>
