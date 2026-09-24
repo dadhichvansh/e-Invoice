@@ -35,7 +35,7 @@ type InvoicesProps = {
 
 export function Invoices({ invoices }: InvoicesProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [clientFilter, setClientFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
@@ -70,7 +70,9 @@ export function Invoices({ invoices }: InvoicesProps) {
           .some((value) => value!.toLowerCase().includes(query));
 
       const matchesStatus =
-        statusFilter === 'all' || invoice.status === statusFilter;
+        statusFilter === 'active'
+          ? invoice.status !== 'CANCELLED'
+          : statusFilter === 'all' || invoice.status === statusFilter;
 
       const matchesClient =
         clientFilter === 'all' || invoice.clientId === clientFilter;
@@ -113,7 +115,7 @@ export function Invoices({ invoices }: InvoicesProps) {
 
   const hasFilters =
     searchQuery.trim().length > 0 ||
-    statusFilter !== 'all' ||
+    statusFilter !== 'active' ||
     clientFilter !== 'all' ||
     dateFilter !== 'all';
 
@@ -132,7 +134,8 @@ export function Invoices({ invoices }: InvoicesProps) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="whitespace-nowrap text-sm text-muted-foreground">
-            {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
+            {filteredInvoices.length}{' '}
+            {filteredInvoices.length === 1 ? 'invoice' : 'invoices'}
           </p>
 
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
@@ -153,12 +156,13 @@ export function Invoices({ invoices }: InvoicesProps) {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Select
             value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value ?? 'all')}
+            onValueChange={(value) => setStatusFilter(value ?? 'active')}
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Filter status">
                 {(value) => {
                   const labels: Record<string, string> = {
+                    active: 'Active',
                     all: 'All statuses',
                     DRAFT: 'Draft',
                     PENDING: 'Pending',
@@ -166,7 +170,7 @@ export function Invoices({ invoices }: InvoicesProps) {
                     CANCELLED: 'Cancelled',
                   };
 
-                  return labels[value] ?? 'All statuses';
+                  return labels[value] ?? 'Active';
                 }}
               </SelectValue>
             </SelectTrigger>
@@ -176,6 +180,7 @@ export function Invoices({ invoices }: InvoicesProps) {
               side="bottom"
               sideOffset={4}
             >
+              <SelectItem value="active">Active</SelectItem>
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="DRAFT">Draft</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
@@ -254,7 +259,7 @@ export function Invoices({ invoices }: InvoicesProps) {
               variant="outline"
               onClick={() => {
                 setSearchQuery('');
-                setStatusFilter('all');
+                setStatusFilter('active');
                 setClientFilter('all');
                 setDateFilter('all');
               }}

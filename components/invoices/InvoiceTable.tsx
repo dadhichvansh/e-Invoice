@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Ban } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+import { CancelInvoiceDialog } from './CancelInvoiceDialog';
 
 type InvoiceTableInvoice = {
   id: string;
@@ -59,6 +63,13 @@ function formatStatus(status: string) {
 }
 
 export function InvoiceTable({ invoices, isSearching }: InvoiceTableProps) {
+  const router = useRouter();
+
+  const [invoiceToCancel, setInvoiceToCancel] = useState<{
+    slug: string;
+    invoiceNumber: string;
+  } | null>(null);
+
   if (invoices.length === 0) {
     return (
       <div className="mt-4 rounded-lg border">
@@ -86,82 +97,117 @@ export function InvoiceTable({ invoices, isSearching }: InvoiceTableProps) {
   }
 
   return (
-    <div className="mt-4 overflow-x-auto rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Number</TableHead>
-            <TableHead>Project</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Due</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="w-25 text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.id}>
-              <TableCell>
-                <div className="font-medium">{invoice.invoiceNumber}</div>
-              </TableCell>
-
-              <TableCell>
-                <span className="text-muted-foreground">
-                  {invoice.projectName || '—'}
-                </span>
-              </TableCell>
-
-              <TableCell>
-                <div className="font-medium">{invoice.clientName}</div>
-              </TableCell>
-
-              <TableCell className="whitespace-nowrap">
-                {formatDate(invoice.invoiceDate)}
-              </TableCell>
-
-              <TableCell className="whitespace-nowrap">
-                {formatDate(invoice.dueDate)}
-              </TableCell>
-
-              <TableCell>
-                <span className="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium">
-                  {formatStatus(invoice.status)}
-                </span>
-              </TableCell>
-
-              <TableCell className="whitespace-nowrap text-right">
-                {formatAmount(invoice.grandTotal, invoice.currency)}
-              </TableCell>
-
-              <TableCell>
-                <div className="flex justify-end gap-1">
-                  <Link href={`/invoices/${invoice.slug}/edit`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Edit ${invoice.invoiceNumber}`}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </Link>
-
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    type="button"
-                    aria-label={`Delete ${invoice.invoiceNumber}`}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </TableCell>
+    <>
+      <div className="mt-4 overflow-x-auto rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Number</TableHead>
+              <TableHead>Project</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Due</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="w-25 text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+
+          <TableBody>
+            {invoices.map((invoice) => (
+              <TableRow key={invoice.id}>
+                <TableCell>
+                  <div className="font-medium">{invoice.invoiceNumber}</div>
+                </TableCell>
+
+                <TableCell>
+                  <span className="text-muted-foreground">
+                    {invoice.projectName || '—'}
+                  </span>
+                </TableCell>
+
+                <TableCell>
+                  <div className="font-medium">{invoice.clientName}</div>
+                </TableCell>
+
+                <TableCell className="whitespace-nowrap">
+                  {formatDate(invoice.invoiceDate)}
+                </TableCell>
+
+                <TableCell className="whitespace-nowrap">
+                  {formatDate(invoice.dueDate)}
+                </TableCell>
+
+                <TableCell>
+                  <span className="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium">
+                    {formatStatus(invoice.status)}
+                  </span>
+                </TableCell>
+
+                <TableCell className="whitespace-nowrap text-right">
+                  {formatAmount(invoice.grandTotal, invoice.currency)}
+                </TableCell>
+
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    {invoice.status !== 'CANCELLED' && (
+                      <>
+                        <Link href={`/invoices/${invoice.slug}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Edit ${invoice.invoiceNumber}`}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        </Link>
+
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          type="button"
+                          aria-label={`Cancel ${invoice.invoiceNumber}`}
+                          onClick={() =>
+                            setInvoiceToCancel({
+                              slug: invoice.slug,
+                              invoiceNumber: invoice.invoiceNumber,
+                            })
+                          }
+                        >
+                          <Ban className="size-4" />
+                        </Button>
+                      </>
+                    )}
+
+                    {invoice.status === 'CANCELLED' && (
+                      <span className="px-2 text-xs text-muted-foreground">
+                        Cancelled
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {invoiceToCancel && (
+        <CancelInvoiceDialog
+          invoiceSlug={invoiceToCancel.slug}
+          invoiceNumber={invoiceToCancel.invoiceNumber}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setInvoiceToCancel(null);
+            }
+          }}
+          onCancelled={() => {
+            setInvoiceToCancel(null);
+            router.refresh();
+          }}
+        />
+      )}
+    </>
   );
 }

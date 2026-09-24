@@ -37,6 +37,7 @@ type InvoiceDetailsProps = {
   clients: InvoiceDetailsClient[];
   categories: InvoiceDetailsCategory[];
   currencies: InvoiceDetailsCurrency[];
+  isEditMode: boolean;
 
   clientId: string;
   invoiceCategoryId: string;
@@ -61,6 +62,7 @@ export function InvoiceDetails({
   clients,
   categories,
   currencies,
+  isEditMode,
   clientId,
   invoiceCategoryId,
   status,
@@ -94,6 +96,7 @@ export function InvoiceDetails({
           <Select
             value={clientId}
             onValueChange={(value) => onClientChange(value ?? '')}
+            disabled={isEditMode}
           >
             <SelectTrigger id="client" className="w-full">
               <SelectValue placeholder="Select a client">
@@ -132,6 +135,7 @@ export function InvoiceDetails({
           <Select
             value={invoiceCategoryId}
             onValueChange={(value) => onCategoryChange(value ?? '')}
+            disabled={isEditMode}
           >
             <SelectTrigger id="invoice-category" className="w-full">
               <SelectValue placeholder="Select a category">
@@ -170,6 +174,7 @@ export function InvoiceDetails({
             type="date"
             value={invoiceDate}
             onChange={(event) => onInvoiceDateChange(event.target.value)}
+            disabled={isEditMode}
           />
         </div>
 
@@ -182,6 +187,7 @@ export function InvoiceDetails({
             type="date"
             value={dueDate}
             onChange={(event) => onDueDateChange(event.target.value)}
+            disabled={isEditMode}
           />
         </div>
 
@@ -287,7 +293,9 @@ export function InvoiceDetails({
           </Select>
 
           <p className="text-xs text-muted-foreground">
-            Set the initial status of this invoice.
+            {isEditMode
+              ? 'Set the current status of this invoice.'
+              : 'Set the initial status of this invoice.'}
           </p>
         </div>
 
@@ -300,6 +308,7 @@ export function InvoiceDetails({
             value={projectName}
             onChange={(event) => onProjectNameChange(event.target.value)}
             placeholder="Enter project name"
+            disabled={isEditMode}
           />
         </div>
 
@@ -313,6 +322,7 @@ export function InvoiceDetails({
             onChange={(event) => onProjectDescriptionChange(event.target.value)}
             placeholder="Add a description for the project"
             className="min-h-24"
+            disabled={isEditMode}
           />
         </div>
       </div>

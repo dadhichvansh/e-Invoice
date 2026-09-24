@@ -19,6 +19,7 @@ type InvoicePaymentMethod = {
 
 type InvoicePaymentProps = {
   paymentMethods: InvoicePaymentMethod[];
+  isEditMode: boolean;
   paymentMethodId: string;
   paymentReference: string;
   notes: string;
@@ -31,6 +32,7 @@ type InvoicePaymentProps = {
 
 export function InvoicePayment({
   paymentMethods,
+  isEditMode,
   paymentMethodId,
   paymentReference,
   notes,
@@ -55,6 +57,7 @@ export function InvoicePayment({
           <Select
             value={paymentMethodId}
             onValueChange={(value) => onPaymentMethodChange(value ?? '')}
+            disabled={isEditMode}
           >
             <SelectTrigger id="payment-method" className="w-full">
               <SelectValue placeholder="Select a payment method">
