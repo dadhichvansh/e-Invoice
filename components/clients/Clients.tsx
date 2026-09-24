@@ -69,28 +69,28 @@ export function Clients({ clients }: ClientsProps) {
             Manage your clients and their contact details.
           </p>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="whitespace-nowrap text-sm text-muted-foreground">
-          {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="whitespace-nowrap text-sm text-muted-foreground">
+            {clients.length} {clients.length === 1 ? 'client' : 'clients'}
+          </p>
 
-        <div className="flex w-full gap-2 sm:max-w-sm">
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search clients..."
-            aria-label="Search clients"
-          />
+          <div className="flex w-full gap-2 sm:max-w-sm">
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search clients..."
+              aria-label="Search clients"
+            />
 
-          <Link href="/clients/new" className="shrink-0">
-            <Button>Add client</Button>
-          </Link>
+            <Link href="/clients/new" className="shrink-0">
+              <Button>Add client</Button>
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <ClientTable clients={filteredClients} isSearching={isSearching} />
+        <ClientTable clients={filteredClients} isSearching={isSearching} />
+      </div>
     </main>
   );
 }
