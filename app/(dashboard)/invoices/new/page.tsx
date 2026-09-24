@@ -87,7 +87,7 @@ export default async function NewInvoicePage() {
           paymentMethods={paymentMethods}
           currencies={currencies}
           defaultCurrency={settings?.defaultCurrency ?? ''}
-          defaultPaymentTerms={settings?.defaultPaymentTerms ?? 30}
+          defaultPaymentTerms={settings?.defaultPaymentTerms ?? 7}
           defaultNotes={settings?.defaultNotes ?? ''}
         />
       </div>

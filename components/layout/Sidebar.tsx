@@ -57,7 +57,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
 
       {/* Logout */}
       <div
-        className={`shrink-0 border-t border-border transition-[padding] duration-500 ease-in-out ${
+        className={`shrink-0 border-t border-border ${
           collapsed ? 'p-2' : 'p-1.5'
         }`}
       >

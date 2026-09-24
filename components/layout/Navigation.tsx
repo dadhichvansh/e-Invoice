@@ -50,7 +50,7 @@ export function Navigation({ collapsed = false }: NavigationProps) {
               <Link
                 href={item.href}
                 title={collapsed ? item.label : undefined}
-                className={`flex items-center rounded-2xl py-2.5 text-sm font-medium transition-[gap,padding,background-color,color] duration-500 ease-in-out ${
+                className={`flex items-center rounded-2xl py-2.5 text-sm font-medium transition-[gap,padding,background-color,color] duration-300 ease-in-out ${
                   collapsed ? 'justify-center gap-0 px-2.5' : 'gap-3 px-3'
                 } ${
                   isActive
@@ -61,7 +61,7 @@ export function Navigation({ collapsed = false }: NavigationProps) {
                 <Icon className="size-4 shrink-0" />
 
                 <span
-                  className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-400 ease-in-out ${
+                  className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out ${
                     collapsed ? 'max-w-0 opacity-0' : 'max-w-40 opacity-100'
                   }`}
                 >

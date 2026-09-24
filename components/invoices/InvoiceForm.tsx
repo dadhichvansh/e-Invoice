@@ -96,7 +96,12 @@ export function InvoiceForm({
   const [paymentMethodId, setPaymentMethodId] = useState('');
   const [paymentReference, setPaymentReference] = useState('');
   const [notes, setNotes] = useState(defaultNotes);
-  const [terms, setTerms] = useState('');
+
+  const [terms, setTerms] = useState(
+    defaultPaymentTerms > 0
+      ? `Payment is due within ${defaultPaymentTerms} days of the invoice date.`
+      : '',
+  );
 
   function updateItem(
     index: number,

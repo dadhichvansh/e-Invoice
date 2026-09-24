@@ -40,14 +40,14 @@ export function LogoutButton({ collapsed = false }: LogoutButtonProps) {
       disabled={isPending}
       title={collapsed ? label : undefined}
       aria-label={collapsed ? label : undefined}
-      className={`h-10 w-full rounded-2xl border-0 text-sm font-medium text-muted-foreground shadow-none transition-[gap,padding,background-color,color] duration-400 ease-in-out hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`h-10 w-full rounded-2xl border-0 text-sm font-medium text-muted-foreground shadow-none transition-[gap,padding,background-color,color] duration-300 ease-in-out hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring ${
         collapsed ? 'justify-center gap-0 px-2.5' : 'justify-start gap-3 px-3'
       }`}
     >
       <LogOut className="size-4 shrink-0" />
 
       <span
-        className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-400 ease-in-out ${
+        className={`overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out ${
           collapsed ? 'max-w-0 opacity-0' : 'max-w-32 opacity-100'
         }`}
       >
