@@ -270,7 +270,6 @@ export function InvoiceForm({
       invoiceDate: new Date(`${invoiceDate}T00:00:00`),
       dueDate: new Date(`${dueDate}T00:00:00`),
       currency,
-      status,
       projectName: projectName || null,
       projectDescription: projectDescription || null,
       discountPercentage: Number(discountPercentage) || 0,

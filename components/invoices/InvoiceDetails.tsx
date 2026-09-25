@@ -264,6 +264,7 @@ export function InvoiceDetails({
                 onStatusChange(value as InvoiceStatus);
               }
             }}
+            disabled={!isEditMode}
           >
             <SelectTrigger id="invoice-status" className="w-full">
               <SelectValue placeholder="Select a status">
@@ -295,7 +296,7 @@ export function InvoiceDetails({
           <p className="text-xs text-muted-foreground">
             {isEditMode
               ? 'Set the current status of this invoice.'
-              : 'Set the initial status of this invoice.'}
+              : 'New invoices are created as Drafts. You can update the status after creation.'}
           </p>
         </div>
 

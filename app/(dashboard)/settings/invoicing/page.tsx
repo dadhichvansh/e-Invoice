@@ -37,7 +37,7 @@ export default async function InvoicingSettingsPage() {
   ]);
 
   return (
-    <main className="p-9">
+    <main className="p-4 sm:p-6 lg:p-9">
       <div className="w-full space-y-5">
         <Link
           href="/settings"

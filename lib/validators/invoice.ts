@@ -21,10 +21,6 @@ export const createInvoiceSchema = z.object({
   invoiceDate: z.coerce.date(),
   dueDate: z.coerce.date(),
   currency: z.string().trim().min(1, 'Currency is required.'),
-  status: z.enum(
-    ['DRAFT', 'PENDING', 'PAID', 'CANCELLED'],
-    'Please select a valid invoice status.',
-  ),
   projectName: z
     .string()
     .trim()

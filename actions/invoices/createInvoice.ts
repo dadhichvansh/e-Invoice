@@ -31,7 +31,6 @@ export async function createInvoice(input: CreateInvoiceInput) {
     invoiceDate,
     dueDate,
     currency,
-    status,
     projectName,
     projectDescription,
     discountPercentage,
@@ -149,7 +148,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
         dueDate,
 
         currency,
-        status,
+        status: 'DRAFT',
 
         projectName: projectName || null,
         projectDescription: projectDescription || null,
