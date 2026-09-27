@@ -90,6 +90,7 @@ export async function updateInvoice(slug: string, input: UpdateInvoiceInput) {
         currency,
         status,
         discountPercentage,
+        subtotal,
         discountAmount,
         grandTotal,
         paymentReference: paymentReference || null,
