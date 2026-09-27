@@ -144,7 +144,7 @@ export function InvoicePdfDocument({
   const paymentDetails = getPaymentDetails(invoice.paymentMethodDetails);
 
   return (
-    <Document {...documentProps}>
+    <Document {...documentProps} title={`invoice-${invoice.invoiceNumber}`}>
       <Page size="A4" orientation="portrait" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerRow}>

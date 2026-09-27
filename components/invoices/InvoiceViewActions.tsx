@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Pencil, Printer, XCircle } from 'lucide-react';
+import { Pencil, FileDown, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { updateInvoiceStatus } from '@/actions/invoices/updateInvoiceStatus';
@@ -70,8 +70,8 @@ export function InvoiceViewActions({
     window.location.reload();
   }
 
-  function handlePrint() {
-    window.print();
+  async function handlePrint() {
+    window.open(`/api/invoice/${slug}/pdf`, '_blank', 'noopener,noreferrer');
   }
 
   function handleCancelled() {
@@ -126,8 +126,8 @@ export function InvoiceViewActions({
         )}
 
         <Button type="button" variant="outline" onClick={handlePrint}>
-          <Printer className="size-4" />
-          Print
+          <FileDown className="size-4" />
+          Download
         </Button>
 
         {!isCancelled && (

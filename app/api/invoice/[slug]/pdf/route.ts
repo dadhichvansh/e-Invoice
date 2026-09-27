@@ -66,7 +66,7 @@ export async function GET(_request: Request, { params }: InvoicePdfRouteProps) {
   return new Response(new Uint8Array(pdfBuffer), {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="invoice-${slug}.pdf"`,
+      'Content-Disposition': `inline; filename="invoice-${invoice.invoiceNumber}.pdf"`,
       'Cache-Control': 'private, no-store',
     },
   });
