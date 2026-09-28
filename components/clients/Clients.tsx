@@ -75,12 +75,13 @@ export function Clients({ clients }: ClientsProps) {
             {clients.length} {clients.length === 1 ? 'client' : 'clients'}
           </p>
 
-          <div className="flex w-full gap-2 sm:max-w-sm">
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
             <Input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search clients..."
               aria-label="Search clients"
+              className="sm:max-w-xs"
             />
 
             <Link href="/clients/new" className="shrink-0">

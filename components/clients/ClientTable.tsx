@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Pencil, Trash2, Mail, Phone } from 'lucide-react';
+import { Pencil, Trash2, Mail, Phone, Eye } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -120,6 +120,16 @@ export function ClientTable({ clients, isSearching }: ClientTableProps) {
 
                   <TableCell>
                     <div className="flex justify-end gap-1">
+                      <Link href={`/clients/${client.slug}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Edit ${client.name}`}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                      </Link>
+
                       <Link href={`/clients/${client.slug}/edit`}>
                         <Button
                           variant="ghost"

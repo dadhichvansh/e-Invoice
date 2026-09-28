@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { getInvoiceBySlug } from '@/actions/invoices/getInvoiceBySlug';
 import { InvoiceView } from '@/components/invoices/InvoiceView';
-import { Button } from '@/components/ui/button';
+
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
 import { prisma } from '@/lib/db/prisma';
+
+import { getInvoiceBySlug } from '@/actions/invoices/getInvoiceBySlug';
 
 interface ViewInvoicePageProps {
   params: Promise<{
@@ -26,11 +27,12 @@ export default async function ViewInvoicePage({
     return (
       <main className="p-4 sm:p-6 lg:p-9">
         <div className="w-full space-y-4">
-          <Link href="/invoices">
-            <Button variant="outline">
-              <ArrowLeft className="size-4" />
-              Back to invoices
-            </Button>
+          <Link
+            href="/invoices"
+            className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3" />
+            Back to Invoices
           </Link>
 
           <div>
