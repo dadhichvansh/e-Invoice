@@ -52,7 +52,9 @@ export function InvoicePayment({
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="payment-method">Payment Method</Label>
+          <Label htmlFor="payment-method">
+            Payment Method <span className="text-destructive">*</span>
+          </Label>
 
           <Select
             value={paymentMethodId}
@@ -94,7 +96,7 @@ export function InvoicePayment({
             id="payment-reference"
             value={paymentReference}
             onChange={(event) => onPaymentReferenceChange(event.target.value)}
-            placeholder="Optional payment reference"
+            placeholder="e.g. UTR123456789012"
           />
         </div>
 

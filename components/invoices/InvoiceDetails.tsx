@@ -91,7 +91,9 @@ export function InvoiceDetails({
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         {/* Client */}
         <div className="space-y-2">
-          <Label htmlFor="client">Client</Label>
+          <Label htmlFor="client">
+            Client <span className="text-destructive">*</span>
+          </Label>
 
           <Select
             value={clientId}
@@ -130,7 +132,9 @@ export function InvoiceDetails({
 
         {/* Category */}
         <div className="space-y-2">
-          <Label htmlFor="invoice-category">Category</Label>
+          <Label htmlFor="invoice-category">
+            Category <span className="text-destructive">*</span>
+          </Label>
 
           <Select
             value={invoiceCategoryId}
@@ -167,7 +171,9 @@ export function InvoiceDetails({
 
         {/* Invoice Date */}
         <div className="space-y-2">
-          <Label htmlFor="invoice-date">Invoice Date</Label>
+          <Label htmlFor="invoice-date">
+            Invoice Date <span className="text-destructive">*</span>
+          </Label>
 
           <Input
             id="invoice-date"
@@ -180,7 +186,9 @@ export function InvoiceDetails({
 
         {/* Due Date */}
         <div className="space-y-2">
-          <Label htmlFor="due-date">Due Date</Label>
+          <Label htmlFor="due-date">
+            Due Date <span className="text-destructive">*</span>
+          </Label>
 
           <Input
             id="due-date"
@@ -193,7 +201,9 @@ export function InvoiceDetails({
 
         {/* Currency */}
         <div className="space-y-2">
-          <Label htmlFor="currency">Currency</Label>
+          <Label htmlFor="currency">
+            Currency <span className="text-destructive">*</span>
+          </Label>
 
           <Select
             value={currency}

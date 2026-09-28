@@ -1,4 +1,5 @@
 import { FilePlus, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 
 export function OverviewHeader() {
   return (
@@ -14,21 +15,21 @@ export function OverviewHeader() {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
+        <Link
+          href="/clients/new"
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
         >
           <UserPlus className="size-4" />
           Add Client
-        </button>
+        </Link>
 
-        <button
-          type="button"
+        <Link
+          href="/invoices/new"
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           <FilePlus className="size-4" />
           New Invoice
-        </button>
+        </Link>
       </div>
     </div>
   );

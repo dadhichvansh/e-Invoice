@@ -3,7 +3,6 @@ import { ArrowLeft } from 'lucide-react';
 
 import { getInvoiceBySlug } from '@/actions/invoices/getInvoiceBySlug';
 import { InvoiceForm } from '@/components/invoices/InvoiceForm';
-import { Button } from '@/components/ui/button';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
 import { prisma } from '@/lib/db/prisma';
 
@@ -24,13 +23,14 @@ export default async function EditInvoicePage({
 
   if (!invoiceResult.success) {
     return (
-      <main className="p-9">
+      <main className="p-4 sm:p-6 lg:p-9">
         <div className="w-full space-y-4">
-          <Link href="/invoices">
-            <Button variant="outline">
-              <ArrowLeft className="size-4" />
-              Back to invoices
-            </Button>
+          <Link
+            href="/invoices"
+            className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3" />
+            Back to Invoices
           </Link>
 
           <div>

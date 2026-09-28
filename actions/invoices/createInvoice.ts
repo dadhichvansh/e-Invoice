@@ -75,19 +75,15 @@ export async function createInvoice(input: CreateInvoiceInput) {
       }
     }
 
-    let paymentMethod = null;
+    const paymentMethod = await tx.paymentMethod.findFirst({
+      where: {
+        id: paymentMethodId,
+        userId: user.id,
+      },
+    });
 
-    if (paymentMethodId) {
-      paymentMethod = await tx.paymentMethod.findFirst({
-        where: {
-          id: paymentMethodId,
-          userId: user.id,
-        },
-      });
-
-      if (!paymentMethod) {
-        throw new Error('Payment method not found.');
-      }
+    if (!paymentMethod) {
+      throw new Error('Payment method not found.');
     }
 
     const settings = await tx.invoicingSettings.findUnique({
@@ -140,7 +136,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
 
         clientId,
         invoiceCategoryId: invoiceCategory?.id ?? null,
-        paymentMethodId: paymentMethod?.id ?? null,
+        paymentMethodId: paymentMethod.id,
 
         invoiceNumber,
 
@@ -173,9 +169,9 @@ export async function createInvoice(input: CreateInvoiceInput) {
         clientPostalCode: client.postalCode,
         clientCountry: client.country,
 
-        paymentMethodName: paymentMethod?.name ?? null,
-        paymentMethodType: paymentMethod?.type ?? null,
-        paymentMethodDetails: paymentMethod?.details ?? undefined,
+        paymentMethodName: paymentMethod.name,
+        paymentMethodType: paymentMethod.type,
+        paymentMethodDetails: paymentMethod.details ?? undefined,
 
         invoiceCategoryName: invoiceCategory?.name ?? null,
         invoiceCategoryCode: invoiceCategory?.code ?? null,

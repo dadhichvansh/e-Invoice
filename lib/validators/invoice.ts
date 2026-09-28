@@ -8,16 +8,8 @@ export const invoiceItemSchema = z.object({
 
 export const createInvoiceSchema = z.object({
   clientId: z.uuid('Please select a valid client.').trim(),
-  invoiceCategoryId: z
-    .uuid('Please select a valid invoice category.')
-    .trim()
-    .nullable()
-    .optional(),
-  paymentMethodId: z
-    .uuid('Please select a valid payment method.')
-    .trim()
-    .nullable()
-    .optional(),
+  invoiceCategoryId: z.uuid('Please select a valid invoice category.').trim(),
+  paymentMethodId: z.uuid('Please select a valid payment method.').trim(),
   invoiceDate: z.coerce.date(),
   dueDate: z.coerce.date(),
   currency: z.string().trim().min(1, 'Currency is required.'),
@@ -27,7 +19,12 @@ export const createInvoiceSchema = z.object({
     .max(255, 'Project name is too long.')
     .nullable()
     .optional(),
-  projectDescription: z.string().trim().nullable().optional(),
+  projectDescription: z
+    .string()
+    .trim()
+    .max(1000, 'Project description is too long.')
+    .nullable()
+    .optional(),
   discountPercentage: z
     .number()
     .min(0, 'Discount cannot be negative.')
