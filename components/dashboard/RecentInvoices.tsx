@@ -18,43 +18,21 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-const recentInvoices = [
-  {
-    id: 'INV-2026-008',
-    client: 'Acme Technologies',
-    date: 'Aug 21, 2026',
-    amount: '₹18,500.00',
-    status: 'Paid',
-  },
-  {
-    id: 'INV-2026-007',
-    client: 'PixelCraft Studio',
-    date: 'Aug 18, 2026',
-    amount: '₹12,000.00',
-    status: 'Pending',
-  },
-  {
-    id: 'INV-2026-006',
-    client: 'Nova Digital',
-    date: 'Aug 15, 2026',
-    amount: '₹8,500.00',
-    status: 'Paid',
-  },
-  {
-    id: 'INV-2026-005',
-    client: 'BrightStack Solutions',
-    date: 'Aug 11, 2026',
-    amount: '₹24,000.00',
-    status: 'Overdue',
-  },
-  {
-    id: 'INV-2026-004',
-    client: 'Vertex Labs',
-    date: 'Aug 07, 2026',
-    amount: '₹15,000.00',
-    status: 'Paid',
-  },
-];
+type RecentInvoice = {
+  id: string;
+  slug: string;
+  invoiceNumber: string;
+  clientName: string;
+  invoiceDate: Date;
+  dueDate: Date;
+  status: 'DRAFT' | 'PENDING' | 'PAID' | 'CANCELLED';
+  currency: string;
+  grandTotal: number;
+};
+
+type RecentInvoicesProps = {
+  invoices: RecentInvoice[];
+};
 
 function getInitials(name: string) {
   return name
@@ -65,8 +43,24 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'Paid') {
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function formatAmount(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function StatusBadge({ status }: { status: RecentInvoice['status'] }) {
+  if (status === 'PAID') {
     return (
       <Badge className="border-transparent bg-primary/15 text-primary hover:bg-primary/15">
         Paid
@@ -74,10 +68,18 @@ function StatusBadge({ status }: { status: string }) {
     );
   }
 
-  if (status === 'Overdue') {
+  if (status === 'CANCELLED') {
     return (
       <Badge className="border-transparent bg-destructive/15 text-destructive hover:bg-destructive/15">
-        Overdue
+        Cancelled
+      </Badge>
+    );
+  }
+
+  if (status === 'DRAFT') {
+    return (
+      <Badge className="border-border bg-secondary text-muted-foreground hover:bg-secondary">
+        Draft
       </Badge>
     );
   }
@@ -89,7 +91,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function RecentInvoices() {
+export function RecentInvoices({ invoices }: RecentInvoicesProps) {
   return (
     <Card className="overflow-hidden rounded-3xl">
       <CardHeader className="flex flex-row items-center justify-between gap-4 px-6">
@@ -125,7 +127,7 @@ export function RecentInvoices() {
             </TableHeader>
 
             <TableBody>
-              {recentInvoices.map((invoice) => (
+              {invoices.map((invoice) => (
                 <TableRow
                   key={invoice.id}
                   className="transition-colors hover:bg-secondary/40"
@@ -136,24 +138,27 @@ export function RecentInvoices() {
                         <FileText className="size-4" />
                       </div>
 
-                      <span className="font-medium text-foreground">
-                        {invoice.id}
-                      </span>
+                      <Link
+                        href={`/invoices/${invoice.slug}`}
+                        className="font-medium text-foreground hover:text-primary"
+                      >
+                        {invoice.invoiceNumber}
+                      </Link>
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                        {getInitials(invoice.client)}
+                        {getInitials(invoice.clientName)}
                       </div>
 
-                      <span className="font-medium">{invoice.client}</span>
+                      <span className="font-medium">{invoice.clientName}</span>
                     </div>
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap text-muted-foreground">
-                    {invoice.date}
+                    {formatDate(invoice.invoiceDate)}
                   </TableCell>
 
                   <TableCell>
@@ -161,7 +166,7 @@ export function RecentInvoices() {
                   </TableCell>
 
                   <TableCell className="pr-6 text-right font-semibold whitespace-nowrap">
-                    {invoice.amount}
+                    {formatAmount(invoice.grandTotal, invoice.currency)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -171,7 +176,7 @@ export function RecentInvoices() {
 
         {/* Mobile */}
         <div className="divide-y divide-border md:hidden">
-          {recentInvoices.map((invoice) => (
+          {invoices.map((invoice) => (
             <div
               key={invoice.id}
               className="px-5 py-4 transition-colors hover:bg-secondary/40"
@@ -183,12 +188,15 @@ export function RecentInvoices() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {invoice.id}
-                    </p>
+                    <Link
+                      href={`/invoices/${invoice.slug}`}
+                      className="block truncate text-sm font-medium text-foreground hover:text-primary"
+                    >
+                      {invoice.invoiceNumber}
+                    </Link>
 
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {invoice.client}
+                      {invoice.clientName}
                     </p>
                   </div>
                 </div>
@@ -198,16 +206,22 @@ export function RecentInvoices() {
 
               <div className="mt-3 flex items-center justify-between gap-4 pl-12">
                 <span className="text-xs text-muted-foreground">
-                  {invoice.date}
+                  {formatDate(invoice.invoiceDate)}
                 </span>
 
                 <span className="text-sm font-semibold text-foreground">
-                  {invoice.amount}
+                  {formatAmount(invoice.grandTotal, invoice.currency)}
                 </span>
               </div>
             </div>
           ))}
         </div>
+
+        {invoices.length === 0 && (
+          <div className="px-6 py-10 text-center text-sm text-muted-foreground">
+            No invoices found.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
