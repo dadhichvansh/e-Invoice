@@ -265,8 +265,8 @@ export function InvoiceForm({
 
     const result = await createInvoice({
       clientId,
-      invoiceCategoryId: invoiceCategoryId || null,
-      paymentMethodId: paymentMethodId || null,
+      invoiceCategoryId: invoiceCategoryId,
+      paymentMethodId: paymentMethodId,
       invoiceDate: new Date(`${invoiceDate}T00:00:00`),
       dueDate: new Date(`${dueDate}T00:00:00`),
       currency,
