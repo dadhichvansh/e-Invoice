@@ -124,7 +124,7 @@ export function ClientTable({ clients, isSearching }: ClientTableProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label={`Edit ${client.name}`}
+                          aria-label={`View ${client.name}`}
                         >
                           <Eye className="size-4" />
                         </Button>

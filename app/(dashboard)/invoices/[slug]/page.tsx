@@ -26,7 +26,7 @@ export default async function ViewInvoicePage({
   if (!invoiceResult.success) {
     return (
       <main className="p-4 sm:p-6 lg:p-9">
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-5">
           <Link
             href="/invoices"
             className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"

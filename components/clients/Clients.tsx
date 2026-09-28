@@ -58,7 +58,7 @@ export function Clients({ clients }: ClientsProps) {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <main className="p-9">
+    <main className="p-4 sm:p-6 lg:p-9">
       <div className="w-full space-y-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
