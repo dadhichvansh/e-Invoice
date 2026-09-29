@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Pencil, Eye } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -56,6 +57,23 @@ function formatStatus(status: string) {
   };
 
   return labels[status] ?? status;
+}
+
+function getStatusClassName(status: string) {
+  switch (status) {
+    case 'PAID':
+      return 'border-transparent bg-primary/15 text-primary hover:bg-primary/15';
+
+    case 'CANCELLED':
+      return 'border-transparent bg-destructive/15 text-destructive hover:bg-destructive/15';
+
+    case 'DRAFT':
+
+    case 'PENDING':
+
+    default:
+      return 'border-border bg-secondary text-muted-foreground hover:bg-secondary';
+  }
 }
 
 export function InvoiceTable({ invoices, isSearching }: InvoiceTableProps) {
@@ -127,9 +145,9 @@ export function InvoiceTable({ invoices, isSearching }: InvoiceTableProps) {
               </TableCell>
 
               <TableCell>
-                <span className="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium">
+                <Badge className={getStatusClassName(invoice.status)}>
                   {formatStatus(invoice.status)}
-                </span>
+                </Badge>
               </TableCell>
 
               <TableCell className="whitespace-nowrap text-right">

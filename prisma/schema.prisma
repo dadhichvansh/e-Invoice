@@ -254,7 +254,7 @@ model Invoice {
 
   discountPercentage Decimal @default(0) @map("discount_percentage")
 
-  paymentReference String? @map("payment_reference")
+  paymentReference String? @default("") @map("payment_reference")
 
   notes String?
   terms String?

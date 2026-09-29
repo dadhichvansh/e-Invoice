@@ -105,6 +105,10 @@ export function InvoiceForm({
   const router = useRouter();
 
   const isEditMode = mode === 'edit';
+  const isReadOnly =
+    isEditMode &&
+    (initialInvoice?.status === 'PAID' ||
+      initialInvoice?.status === 'CANCELLED');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -189,6 +193,33 @@ export function InvoiceForm({
         : ''),
   );
 
+  const isDirty = isEditMode
+    ? JSON.stringify({
+        status,
+        discountPercentage,
+        paymentReference,
+        notes,
+        terms,
+        items,
+      }) !==
+      JSON.stringify({
+        status: initialInvoice?.status,
+        discountPercentage: String(initialInvoice?.discountPercentage ?? 0),
+        paymentReference: initialInvoice?.paymentReference ?? '',
+        notes: initialInvoice?.notes ?? '',
+        terms: initialInvoice?.terms ?? '',
+        items:
+          initialInvoice?.items.map((item) => ({
+            description: item.description,
+            quantity: String(item.quantity),
+            rate: String(item.rate),
+          })) ?? [],
+      })
+    : true;
+
+  const currencySymbol =
+    currencies.find((item) => item.code === currency)?.symbol ?? '';
+
   function updateItem(
     index: number,
     field: keyof InvoiceItemForm,
@@ -226,10 +257,21 @@ export function InvoiceForm({
   async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (isReadOnly) {
+      toast.error('Paid and cancelled invoices cannot be modified.');
+      return;
+    }
+
+    if (status === 'PAID' && !paymentReference.trim()) {
+      toast.error(
+        'Payment reference is required when marking an invoice as paid.',
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const invoiceInput = {
-      currency,
       status,
       discountPercentage: Number(discountPercentage) || 0,
       paymentReference: paymentReference || null,
@@ -273,7 +315,6 @@ export function InvoiceForm({
       projectName: projectName || null,
       projectDescription: projectDescription || null,
       discountPercentage: Number(discountPercentage) || 0,
-      paymentReference: paymentReference || null,
       notes: notes || null,
       terms: terms || null,
       items: items.map((item) => ({
@@ -301,6 +342,7 @@ export function InvoiceForm({
         categories={categories}
         currencies={currencies}
         isEditMode={isEditMode}
+        isReadOnly={isReadOnly}
         clientId={clientId}
         invoiceCategoryId={invoiceCategoryId}
         status={status}
@@ -321,6 +363,10 @@ export function InvoiceForm({
 
       <InvoiceItems
         items={items}
+        isEditMode={isEditMode}
+        isReadOnly={isReadOnly}
+        status={status}
+        currencySymbol={currencySymbol}
         discountPercentage={discountPercentage}
         onUpdateItem={updateItem}
         onAddItem={addItem}
@@ -331,6 +377,8 @@ export function InvoiceForm({
       <InvoicePayment
         paymentMethods={paymentMethods}
         isEditMode={isEditMode}
+        isReadOnly={isReadOnly}
+        status={status}
         paymentMethodId={paymentMethodId}
         paymentReference={paymentReference}
         notes={notes}
@@ -342,7 +390,7 @@ export function InvoiceForm({
       />
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || !isDirty}>
           {isSubmitting
             ? isEditMode
               ? 'Updating...'

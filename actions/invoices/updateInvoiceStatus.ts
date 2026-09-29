@@ -28,10 +28,10 @@ export async function updateInvoiceStatus(slug: string, status: InvoiceStatus) {
     };
   }
 
-  if (invoice.status === 'CANCELLED') {
+  if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
     return {
       success: false,
-      message: 'Cancelled invoices cannot have their status changed.',
+      message: `${invoice.status === 'PAID' ? 'Paid' : 'Cancelled'} invoices cannot have their status changed.`,
     };
   }
 

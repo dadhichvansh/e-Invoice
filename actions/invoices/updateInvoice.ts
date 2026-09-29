@@ -22,15 +22,8 @@ export async function updateInvoice(slug: string, input: UpdateInvoiceInput) {
     };
   }
 
-  const {
-    currency,
-    status,
-    discountPercentage,
-    paymentReference,
-    notes,
-    terms,
-    items,
-  } = validatedInput.data;
+  const { status, discountPercentage, paymentReference, notes, terms, items } =
+    validatedInput.data;
 
   const invoice = await prisma.invoice.findFirst({
     where: {
@@ -50,27 +43,17 @@ export async function updateInvoice(slug: string, input: UpdateInvoiceInput) {
     };
   }
 
-  if (invoice.status === 'CANCELLED') {
+  if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
     return {
       success: false,
-      message: 'Cancelled invoices cannot be edited.',
+      message: `${invoice.status === 'PAID' ? 'Paid' : 'Cancelled'} invoices cannot be edited.`,
     };
   }
 
-  const currencyRecord = await prisma.currency.findFirst({
-    where: {
-      userId: user.id,
-      code: currency,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!currencyRecord) {
+  if (status === 'PAID' && !paymentReference?.trim()) {
     return {
       success: false,
-      message: 'Selected currency is no longer available.',
+      message: 'Payment reference is required when marking an invoice as paid.',
     };
   }
 
@@ -87,7 +70,6 @@ export async function updateInvoice(slug: string, input: UpdateInvoiceInput) {
         id: invoice.id,
       },
       data: {
-        currency,
         status,
         discountPercentage,
         subtotal,

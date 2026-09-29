@@ -43,10 +43,16 @@ export function InvoiceViewActions({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 
-  const isCancelled = status === 'CANCELLED';
+  const isStatusLocked = status === 'PAID' || status === 'CANCELLED';
 
   async function handleStatusChange(value: string | null) {
-    if (!value || value === status || value === 'CANCELLED') {
+    if (
+      !value ||
+      value === status ||
+      value === 'CANCELLED' ||
+      status === 'PAID' ||
+      status === 'CANCELLED'
+    ) {
       return;
     }
 
@@ -82,7 +88,7 @@ export function InvoiceViewActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-        {!isCancelled && (
+        {!isStatusLocked && (
           <>
             <Select
               value={status}
@@ -130,7 +136,7 @@ export function InvoiceViewActions({
           Download
         </Button>
 
-        {!isCancelled && (
+        {!isStatusLocked && (
           <Button
             type="button"
             variant="outline"

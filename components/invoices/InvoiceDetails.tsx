@@ -38,6 +38,7 @@ type InvoiceDetailsProps = {
   categories: InvoiceDetailsCategory[];
   currencies: InvoiceDetailsCurrency[];
   isEditMode: boolean;
+  isReadOnly: boolean;
 
   clientId: string;
   invoiceCategoryId: string;
@@ -63,6 +64,7 @@ export function InvoiceDetails({
   categories,
   currencies,
   isEditMode,
+  isReadOnly,
   clientId,
   invoiceCategoryId,
   status,
@@ -85,7 +87,13 @@ export function InvoiceDetails({
       <h2 className="text-base font-semibold">Invoice Details</h2>
 
       <p className="mt-1 text-sm text-muted-foreground">
-        Add the basic details for this invoice.
+        {!isEditMode
+          ? 'Add the basic details for your new invoice.'
+          : isReadOnly
+            ? status === 'PAID'
+              ? 'This invoice is paid and its details cannot be modified.'
+              : 'This invoice is cancelled and its details cannot be modified.'
+            : 'Review and update the details of your invoice.'}
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -208,7 +216,7 @@ export function InvoiceDetails({
           <Select
             value={currency}
             onValueChange={(value) => onCurrencyChange(value ?? '')}
-            disabled={currencies.length === 0}
+            disabled={currencies.length === 0 || isEditMode}
           >
             <SelectTrigger id="currency" className="w-full">
               <SelectValue
@@ -258,14 +266,18 @@ export function InvoiceDetails({
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Select the currency for this invoice.
+              {isEditMode
+                ? 'The currency cannot be changed after an invoice is created.'
+                : 'Choose the currency you want to use for this invoice.'}
             </p>
           )}
         </div>
 
         {/* Status */}
         <div className="space-y-2">
-          <Label htmlFor="invoice-status">Status</Label>
+          <Label htmlFor="invoice-status">
+            Status <span className="text-destructive">*</span>
+          </Label>
 
           <Select
             value={status}
@@ -274,7 +286,7 @@ export function InvoiceDetails({
                 onStatusChange(value as InvoiceStatus);
               }
             }}
-            disabled={!isEditMode}
+            disabled={!isEditMode || isReadOnly}
           >
             <SelectTrigger id="invoice-status" className="w-full">
               <SelectValue placeholder="Select a status">
@@ -304,9 +316,13 @@ export function InvoiceDetails({
           </Select>
 
           <p className="text-xs text-muted-foreground">
-            {isEditMode
-              ? 'Set the current status of this invoice.'
-              : 'New invoices are created as Drafts. You can update the status after creation.'}
+            {!isEditMode
+              ? 'New invoices are created as Drafts. You can update the status after creation.'
+              : isReadOnly
+                ? status === 'PAID'
+                  ? 'Paid invoices are locked and cannot be modified.'
+                  : 'Cancelled invoices are locked and cannot be modified.'
+                : 'Update the status as your invoice progresses.'}
           </p>
         </div>
 

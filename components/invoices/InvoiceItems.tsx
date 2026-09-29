@@ -18,9 +18,15 @@ export type InvoiceItemForm = {
   rate: string;
 };
 
+type InvoiceStatus = 'DRAFT' | 'PENDING' | 'PAID' | 'CANCELLED';
+
 type InvoiceItemsProps = {
   items: InvoiceItemForm[];
+  isEditMode: boolean;
+  isReadOnly: boolean;
+  status: InvoiceStatus;
   discountPercentage: string;
+  currencySymbol: string;
   onUpdateItem: (
     index: number,
     field: keyof InvoiceItemForm,
@@ -33,6 +39,10 @@ type InvoiceItemsProps = {
 
 export function InvoiceItems({
   items,
+  isEditMode,
+  isReadOnly,
+  status,
+  currencySymbol,
   discountPercentage,
   onUpdateItem,
   onAddItem,
@@ -55,7 +65,13 @@ export function InvoiceItems({
       <h2 className="text-lg font-semibold">Invoice Items</h2>
 
       <p className="mt-1 text-sm text-muted-foreground">
-        Add the products or services included in this invoice.
+        {!isEditMode
+          ? 'Add the products or services included in this invoice.'
+          : isReadOnly
+            ? status === 'PAID'
+              ? 'This invoice is paid and its items cannot be modified.'
+              : 'This invoice is cancelled and its items cannot be modified.'
+            : 'Review and update the items included in this invoice.'}
       </p>
 
       <div className="mt-6 space-y-3">
@@ -86,6 +102,7 @@ export function InvoiceItems({
                           onUpdateItem(index, 'description', event.target.value)
                         }
                         placeholder="Item description"
+                        disabled={isReadOnly}
                       />
                     </TableCell>
 
@@ -98,6 +115,7 @@ export function InvoiceItems({
                         onChange={(event) =>
                           onUpdateItem(index, 'quantity', event.target.value)
                         }
+                        disabled={isReadOnly}
                       />
                     </TableCell>
 
@@ -111,6 +129,7 @@ export function InvoiceItems({
                           onUpdateItem(index, 'rate', event.target.value)
                         }
                         placeholder="0.00"
+                        disabled={isReadOnly}
                       />
                     </TableCell>
 
@@ -124,7 +143,7 @@ export function InvoiceItems({
                         variant="ghost"
                         size="sm"
                         onClick={() => onRemoveItem(index)}
-                        disabled={items.length === 1}
+                        disabled={items.length === 1 || isReadOnly}
                         className="text-destructive hover:text-destructive"
                       >
                         Remove
@@ -142,6 +161,7 @@ export function InvoiceItems({
           variant="ghost"
           onClick={onAddItem}
           className="px-2 text-primary hover:text-primary w-max"
+          disabled={isReadOnly}
         >
           + Add item
         </Button>
@@ -151,7 +171,9 @@ export function InvoiceItems({
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Subtotal</span>
 
-              <span className="font-medium">{subtotal.toFixed(2)}</span>
+              <span className="font-medium">
+                {currencySymbol} {subtotal.toFixed(2)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -168,13 +190,16 @@ export function InvoiceItems({
                   onDiscountPercentageChange(event.target.value)
                 }
                 className="w-28 text-right"
+                disabled={isReadOnly}
               />
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Discount Amount</span>
 
-              <span className="font-medium">{discountAmount.toFixed(2)}</span>
+              <span className="font-medium">
+                {currencySymbol} {discountAmount.toFixed(2)}
+              </span>
             </div>
 
             <div className="border-t pt-3">
@@ -182,7 +207,7 @@ export function InvoiceItems({
                 <span className="font-semibold">Grand Total</span>
 
                 <span className="text-lg font-semibold">
-                  {grandTotal.toFixed(2)}
+                  {currencySymbol} {grandTotal.toFixed(2)}
                 </span>
               </div>
             </div>

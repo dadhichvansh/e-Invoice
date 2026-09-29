@@ -29,12 +29,6 @@ export const createInvoiceSchema = z.object({
     .number()
     .min(0, 'Discount cannot be negative.')
     .max(100, 'Discount cannot exceed 100%.'),
-  paymentReference: z
-    .string()
-    .trim()
-    .max(255, 'Payment reference is too long.')
-    .nullable()
-    .optional(),
   notes: z.string().trim().nullable().optional(),
   terms: z.string().trim().nullable().optional(),
   items: z
@@ -45,7 +39,6 @@ export const createInvoiceSchema = z.object({
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 
 export const updateInvoiceSchema = z.object({
-  currency: z.string().trim().min(1, 'Currency is required.'),
   status: z.enum(
     ['DRAFT', 'PENDING', 'PAID', 'CANCELLED'],
     'Please select a valid invoice status.',

@@ -34,7 +34,6 @@ export async function createInvoice(input: CreateInvoiceInput) {
     projectName,
     projectDescription,
     discountPercentage,
-    paymentReference,
     notes,
     terms,
     items,
@@ -150,7 +149,6 @@ export async function createInvoice(input: CreateInvoiceInput) {
         projectDescription: projectDescription || null,
 
         discountPercentage,
-        paymentReference: paymentReference || null,
 
         notes: notes || null,
         terms: terms || null,
