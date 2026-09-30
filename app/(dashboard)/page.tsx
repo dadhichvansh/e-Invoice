@@ -4,6 +4,7 @@ import { RevenueOverview } from '@/components/dashboard/RevenueOverview';
 import { RecentInvoices } from '@/components/dashboard/RecentInvoices';
 
 import { getDashboardData } from '@/actions/dashboard/getDashboardData';
+import { DashboardFinancialStats } from '@/components/dashboard/DashboardFinancialStats';
 
 export default async function DashboardPage() {
   const dashboardResult = await getDashboardData();
@@ -19,7 +20,23 @@ export default async function DashboardPage() {
       <div className="space-y-5">
         <OverviewHeader />
         <DashboardStats stats={stats} />
-        <RevenueOverview revenue={revenue} />
+
+        <div className="grid gap-5 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <RevenueOverview revenue={revenue} />
+          </div>
+
+          <div className="lg:col-span-4">
+            <DashboardFinancialStats
+              stats={{
+                revenue: stats.revenue,
+                outstanding: stats.outstanding,
+                overdue: stats.overdue,
+              }}
+            />
+          </div>
+        </div>
+
         <RecentInvoices invoices={recentInvoices} />
       </div>
     </main>

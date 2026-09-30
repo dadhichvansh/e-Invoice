@@ -17,6 +17,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 type RevenueData = {
   currency: string;
@@ -68,18 +75,33 @@ export function RevenueOverview({ revenue }: RevenueOverviewProps) {
         </div>
 
         {revenue.length > 1 && (
-          <select
+          <Select
             value={selectedCurrency}
-            onChange={(event) => setSelectedCurrency(event.target.value)}
-            className="h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary"
-            aria-label="Select revenue currency"
+            onValueChange={(value) => {
+              if (value !== null) {
+                setSelectedCurrency(value);
+              }
+            }}
           >
-            {revenue.map((item) => (
-              <option key={item.currency} value={item.currency}>
-                {item.currency} ({item.symbol})
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              className="h-9 w-36 min-w-28"
+              aria-label="Select revenue currency"
+            >
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+
+            <SelectContent
+              alignItemWithTrigger={false}
+              side="bottom"
+              sideOffset={4}
+            >
+              {revenue.map((item) => (
+                <SelectItem key={item.currency} value={item.currency}>
+                  {item.currency} ({item.symbol})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </CardHeader>
 
