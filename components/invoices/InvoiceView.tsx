@@ -68,6 +68,7 @@ type InvoiceViewInvoice = {
   paymentMethodDetails: unknown;
   invoiceCategoryName: string | null;
   invoiceCategoryCode: string | null;
+  invoiceCategoryDescription: string | null;
   items: InvoiceViewItem[];
 };
 
@@ -324,7 +325,10 @@ export function InvoiceView({
             </div>
 
             {invoice.invoiceCategoryName && (
-              <Badge variant="secondary" className="shrink-0">
+              <Badge
+                variant="secondary"
+                className="shrink-0 flex items-end gap-2 flex-col"
+              >
                 {invoice.invoiceCategoryName}
               </Badge>
             )}

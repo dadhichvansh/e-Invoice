@@ -232,7 +232,7 @@ export function InvoicePdfDocument({
                 {formatDate(invoice.dueDate)}
               </Text>
 
-              {invoice.invoiceCategoryName && (
+              {invoice.invoiceCategoryDescription && (
                 <>
                   <Text style={styles.metaLabel}>CATEGORY</Text>
                   <Text style={styles.categoryText}>

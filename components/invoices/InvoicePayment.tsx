@@ -101,11 +101,10 @@ export function InvoicePayment({
           </Select>
         </div>
 
-        {isEditMode && (
+        {isEditMode && status === 'PAID' && (
           <div className="space-y-2">
             <Label htmlFor="payment-reference">
-              Payment Reference{' '}
-              {status === 'PAID' && <span className="text-destructive">*</span>}
+              Payment Reference <span className="text-destructive">*</span>
             </Label>
 
             <Input
@@ -116,12 +115,10 @@ export function InvoicePayment({
               disabled={isReadOnly}
             />
 
-            {status === 'PAID' && !paymentReference && (
-              <p className="text-xs text-muted-foreground">
-                A payment reference is required before marking this invoice as
-                paid.
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              A payment reference is required before marking this invoice as
+              paid.
+            </p>
           </div>
         )}
 
