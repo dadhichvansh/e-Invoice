@@ -9,15 +9,16 @@ export async function requireAuthentication() {
   const accessToken = await getAccessToken();
 
   if (!accessToken) {
-    redirect('/api/authentication/refresh');
+    redirect('/login');
   }
 
   try {
     const payload = await verifyAccessToken(accessToken);
+
     const session = await getAuthSession(payload.sessionId);
 
     if (!session || session.userId !== payload.sub) {
-      redirect('/api/authentication/refresh');
+      redirect('/login');
     }
 
     return {
@@ -30,6 +31,6 @@ export async function requireAuthentication() {
       },
     };
   } catch {
-    redirect('/api/authentication/refresh');
+    redirect('/login');
   }
 }

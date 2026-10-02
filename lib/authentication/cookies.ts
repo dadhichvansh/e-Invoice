@@ -3,10 +3,10 @@ import 'server-only';
 import { cookies } from 'next/headers';
 
 import {
-  ACCESS_TOKEN_COOKIE_MAX_AGE_DAYS,
+  ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS,
   ACCESS_TOKEN_COOKIE_NAME,
   BASE_COOKIE_OPTIONS,
-  REFRESH_TOKEN_COOKIE_MAX_AGE_DAYS,
+  REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
   REFRESH_TOKEN_COOKIE_NAME,
 } from '../constants/cookies';
 
@@ -18,12 +18,12 @@ export async function setAuthCookies(
 
   cookieStore.set(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
     ...BASE_COOKIE_OPTIONS,
-    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_DAYS,
+    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_SECONDS,
   });
 
   cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
     ...BASE_COOKIE_OPTIONS,
-    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_DAYS,
+    maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS,
   });
 }
 
