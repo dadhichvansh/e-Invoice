@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
 
   header: {
     padding: 10,
-    backgroundColor: '#F5F2FF',
+    backgroundColor: '#F5F5F5',
   },
 
   headerRow: {
@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: 'bold',
     letterSpacing: 1.2,
-    color: '#6D4AFF',
+    color: '#18181B',
     marginBottom: 5,
   },
 
@@ -48,6 +48,24 @@ export const styles = StyleSheet.create({
     fontSize: 8.5,
     color: '#71717A',
     marginBottom: 3,
+  },
+
+  headerContactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+
+  headerContactIcon: {
+    width: 16,
+    paddingTop: 1,
+  },
+
+  headerContactText: {
+    flex: 1,
+    fontSize: 8.5,
+    lineHeight: 1.35,
+    color: '#71717A',
   },
 
   metaLabel: {
@@ -106,6 +124,24 @@ export const styles = StyleSheet.create({
     marginBottom: 3,
   },
 
+  clientInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+
+  clientInfoIcon: {
+    width: 16,
+    paddingTop: 1,
+  },
+
+  clientInfoText: {
+    flex: 1,
+    fontSize: 8.5,
+    lineHeight: 1.35,
+    color: '#52525B',
+  },
+
   sectionDivider: {
     width: 1,
   },
@@ -125,7 +161,7 @@ export const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F2FF',
+    backgroundColor: '#F5F5F5',
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
@@ -225,22 +261,21 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 5,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    backgroundColor: '#6D4AFF',
-    borderRadius: 8,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: '#E4E4E7',
   },
 
   grandTotalLabel: {
     fontSize: 9,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#18181B',
   },
 
   grandTotalValue: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#18181B',
   },
 
   paymentSection: {

@@ -293,8 +293,9 @@ model Invoice {
    * Preserves the category information used by the invoice
    * even if the original category is modified later.
    */
-  invoiceCategoryName String? @map("invoice_category_name")
-  invoiceCategoryCode String? @map("invoice_category_code")
+  invoiceCategoryName        String? @map("invoice_category_name")
+  invoiceCategoryCode        String? @map("invoice_category_code")
+  invoiceCategoryDescription String? @map("invoice_category_description")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

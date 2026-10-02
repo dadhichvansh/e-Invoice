@@ -12,17 +12,21 @@ export async function requireGuest() {
     return;
   }
 
+  let isAuthenticated = false;
+
   try {
     const payload = await verifyAccessToken(accessToken);
 
     const session = await getAuthSession(payload.sessionId);
 
-    if (session && session.userId === payload.sub) {
-      redirect('/');
-    }
+    isAuthenticated = !!session && session.userId === payload.sub;
   } catch {
     // Invalid or expired access token.
-    // The user is not authenticated from this guard's perspective.
-    return;
+    // The user is treated as unauthenticated.
+    isAuthenticated = false;
+  }
+
+  if (isAuthenticated) {
+    redirect('/');
   }
 }

@@ -7,6 +7,7 @@ import {
 } from '@react-pdf/renderer';
 
 import { styles } from './styles';
+import { PdfIcon } from './PdfIcon';
 
 type InvoicePdfDocumentProps = DocumentProps & {
   invoice: {
@@ -44,6 +45,7 @@ type InvoicePdfDocumentProps = DocumentProps & {
     paymentMethodDetails: unknown;
     invoiceCategoryName: string | null;
     invoiceCategoryCode: string | null;
+    invoiceCategoryDescription: string | null;
     items: {
       id: string;
       description: string;
@@ -155,40 +157,64 @@ export function InvoicePdfDocument({
                 {businessProfile?.businessName || 'Your Business'}
               </Text>
 
-              {businessProfile?.address && (
-                <Text style={styles.contactText}>
-                  {businessProfile.address}
-                </Text>
-              )}
-
-              {(businessProfile?.city ||
+              {(businessProfile?.address ||
+                businessProfile?.city ||
                 businessProfile?.state ||
                 businessProfile?.postalCode ||
                 businessProfile?.country) && (
-                <Text style={styles.contactText}>
-                  {[
-                    businessProfile.city,
-                    businessProfile.state,
-                    businessProfile.postalCode,
-                    businessProfile.country,
-                  ]
-                    .filter(Boolean)
-                    .join(', ')}
-                </Text>
+                <View style={styles.headerContactRow}>
+                  <View style={styles.headerContactIcon}>
+                    <PdfIcon name="location" />
+                  </View>
+
+                  <Text style={styles.headerContactText}>
+                    {[
+                      businessProfile.address,
+                      businessProfile.city,
+                      businessProfile.state,
+                      businessProfile.postalCode,
+                      businessProfile.country,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
+                </View>
               )}
 
               {businessProfile?.email && (
-                <Text style={styles.contactText}>{businessProfile.email}</Text>
+                <View style={styles.headerContactRow}>
+                  <View style={styles.headerContactIcon}>
+                    <PdfIcon name="mail" />
+                  </View>
+
+                  <Text style={styles.headerContactText}>
+                    {businessProfile.email}
+                  </Text>
+                </View>
               )}
 
               {businessProfile?.phone && (
-                <Text style={styles.contactText}>{businessProfile.phone}</Text>
+                <View style={styles.headerContactRow}>
+                  <View style={styles.headerContactIcon}>
+                    <PdfIcon name="phone" />
+                  </View>
+
+                  <Text style={styles.headerContactText}>
+                    {businessProfile.phone}
+                  </Text>
+                </View>
               )}
 
               {businessProfile?.website && (
-                <Text style={styles.contactText}>
-                  {businessProfile.website}
-                </Text>
+                <View style={styles.headerContactRow}>
+                  <View style={styles.headerContactIcon}>
+                    <PdfIcon name="website" />
+                  </View>
+
+                  <Text style={styles.headerContactText}>
+                    {businessProfile.website}
+                  </Text>
+                </View>
               )}
             </View>
 
@@ -210,7 +236,7 @@ export function InvoicePdfDocument({
                 <>
                   <Text style={styles.metaLabel}>CATEGORY</Text>
                   <Text style={styles.categoryText}>
-                    {invoice.invoiceCategoryName}
+                    {invoice.invoiceCategoryDescription}
                   </Text>
                 </>
               )}
@@ -231,30 +257,52 @@ export function InvoicePdfDocument({
                 <Text style={styles.sectionText}>{invoice.clientCompany}</Text>
               )}
 
-              {invoice.clientEmail && (
-                <Text style={styles.sectionText}>{invoice.clientEmail}</Text>
-              )}
-
-              {invoice.clientPhone && (
-                <Text style={styles.sectionText}>{invoice.clientPhone}</Text>
-              )}
-
               {(invoice.clientAddress ||
                 invoice.clientCity ||
                 invoice.clientState ||
                 invoice.clientPostalCode ||
                 invoice.clientCountry) && (
-                <Text style={styles.sectionText}>
-                  {[
-                    invoice.clientAddress,
-                    invoice.clientCity,
-                    invoice.clientState,
-                    invoice.clientPostalCode,
-                    invoice.clientCountry,
-                  ]
-                    .filter(Boolean)
-                    .join(', ')}
-                </Text>
+                <View style={styles.clientInfoRow}>
+                  <View style={styles.clientInfoIcon}>
+                    <PdfIcon name="location" />
+                  </View>
+
+                  <Text style={styles.clientInfoText}>
+                    {[
+                      invoice.clientAddress,
+                      invoice.clientCity,
+                      invoice.clientState,
+                      invoice.clientPostalCode,
+                      invoice.clientCountry,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </Text>
+                </View>
+              )}
+
+              {invoice.clientEmail && (
+                <View style={styles.clientInfoRow}>
+                  <View style={styles.clientInfoIcon}>
+                    <PdfIcon name="mail" />
+                  </View>
+
+                  <Text style={styles.clientInfoText}>
+                    {invoice.clientEmail}
+                  </Text>
+                </View>
+              )}
+
+              {invoice.clientPhone && (
+                <View style={styles.clientInfoRow}>
+                  <View style={styles.clientInfoIcon}>
+                    <PdfIcon name="phone" />
+                  </View>
+
+                  <Text style={styles.clientInfoText}>
+                    {invoice.clientPhone}
+                  </Text>
+                </View>
               )}
             </View>
 

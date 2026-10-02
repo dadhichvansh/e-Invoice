@@ -109,7 +109,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
 
     const invoiceCategoryPart = invoiceCategory
       ? createSlug(invoiceCategory.code).toUpperCase()
-      : 'OTHER';
+      : 'OTH';
 
     const invoiceNumber = [
       invoicePrefix.toUpperCase(),
@@ -173,6 +173,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
 
         invoiceCategoryName: invoiceCategory?.name ?? null,
         invoiceCategoryCode: invoiceCategory?.code ?? null,
+        invoiceCategoryDescription: invoiceCategory?.description ?? null,
 
         items: {
           create: items.map((item, index) => ({
