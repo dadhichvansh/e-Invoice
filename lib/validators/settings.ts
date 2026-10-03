@@ -1,29 +1,29 @@
 import { z } from 'zod';
 
-export const RequestEmailChangeSchema = z.object({
+export const requestEmailChangeSchema = z.object({
   newEmail: z.email(),
 });
 
-export type RequestEmailChangeInput = z.infer<typeof RequestEmailChangeSchema>;
+export type requestEmailChangeInput = z.infer<typeof requestEmailChangeSchema>;
 
-export const VerifyEmailChangeSchema = z.object({
+export const verifyEmailChangeSchema = z.object({
   verificationId: z.uuid(),
   code: z.string().regex(/^\d{6}$/, 'Verification code must be 6 digits.'),
 });
 
-export type VerifyEmailChangeInput = z.infer<typeof VerifyEmailChangeSchema>;
+export type verifyEmailChangeInput = z.infer<typeof verifyEmailChangeSchema>;
 
-export const UpdateNameSchema = z.object({
+export const updateNameSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, 'Name must be at least 2 characters.')
+    .min(3, 'Name must be at least 3 characters.')
     .max(100, 'Name must be less than 100 characters.'),
 });
 
-export type UpdateNameInput = z.infer<typeof UpdateNameSchema>;
+export type updateNameInput = z.infer<typeof updateNameSchema>;
 
-export const UpdatePasswordSchema = z
+export const updatePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required.'),
     newPassword: z
@@ -37,4 +37,4 @@ export const UpdatePasswordSchema = z
     path: ['confirmPassword'],
   });
 
-export type UpdatePasswordInput = z.infer<typeof UpdatePasswordSchema>;
+export type updatePasswordInput = z.infer<typeof updatePasswordSchema>;

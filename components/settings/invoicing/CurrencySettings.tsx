@@ -32,59 +32,119 @@ interface CurrencySettingsProps {
   }[];
 }
 
+interface CurrencyFormData {
+  name: string;
+  code: string;
+  symbol: string;
+}
+
+type CurrencyField = keyof CurrencyFormData;
+
+type CurrencyErrors = Partial<Record<CurrencyField, string | undefined>>;
+
+const emptyCurrency: CurrencyFormData = {
+  name: '',
+  code: '',
+  symbol: '',
+};
+
 export function CurrencySettings({
   currencies: initialCurrencies,
 }: CurrencySettingsProps) {
   const [currencies, setCurrencies] = useState(initialCurrencies);
 
-  const [newCurrency, setNewCurrency] = useState({
-    name: '',
-    code: '',
-    symbol: '',
-  });
+  const [newCurrency, setNewCurrency] =
+    useState<CurrencyFormData>(emptyCurrency);
 
   const [editingCurrencyId, setEditingCurrencyId] = useState<string | null>(
     null,
   );
 
-  const [editingCurrency, setEditingCurrency] = useState({
-    name: '',
-    code: '',
-    symbol: '',
-  });
+  const [editingCurrency, setEditingCurrency] =
+    useState<CurrencyFormData>(emptyCurrency);
+
+  const [newCurrencyErrors, setNewCurrencyErrors] = useState<CurrencyErrors>(
+    {},
+  );
+
+  const [editingCurrencyErrors, setEditingCurrencyErrors] =
+    useState<CurrencyErrors>({});
+
+  const [isAdding, setIsAdding] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [deleteCurrency, setDeleteCurrency] = useState<
     (typeof currencies)[number] | null
   >(null);
 
+  const handleNewCurrencyChange = (field: CurrencyField, value: string) => {
+    setNewCurrency((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    if (newCurrencyErrors[field]) {
+      setNewCurrencyErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const handleEditingCurrencyChange = (field: CurrencyField, value: string) => {
+    setEditingCurrency((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    if (editingCurrencyErrors[field]) {
+      setEditingCurrencyErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
   const handleAddCurrency = async () => {
-    const result = await createCurrency(newCurrency);
-
-    if (!result.success) {
-      toast.error(result.message);
+    if (isAdding || isUpdating) {
       return;
     }
 
-    if (!result.currency) {
-      toast.error('Currency details could not be retrieved.');
-      return;
+    setIsAdding(true);
+
+    try {
+      const result = await createCurrency(newCurrency);
+
+      if (!result.success) {
+        setNewCurrencyErrors(result.fieldErrors);
+        toast.error(result.message);
+        return;
+      }
+
+      if (!result.currency) {
+        toast.error('Currency details could not be retrieved.');
+        return;
+      }
+
+      setNewCurrency(emptyCurrency);
+      setNewCurrencyErrors({});
+
+      setCurrencies((currentCurrencies) => [
+        ...currentCurrencies,
+        result.currency!,
+      ]);
+
+      toast.success(result.message);
+    } finally {
+      setIsAdding(false);
     }
-
-    setNewCurrency({
-      name: '',
-      code: '',
-      symbol: '',
-    });
-
-    setCurrencies((currentCurrencies) => [
-      ...currentCurrencies,
-      result.currency,
-    ]);
-
-    toast.success(result.message);
   };
 
   const handleEditCurrency = (currency: (typeof currencies)[number]) => {
+    if (isAdding || isUpdating) {
+      return;
+    }
+
     setEditingCurrencyId(currency.id);
 
     setEditingCurrency({
@@ -92,40 +152,55 @@ export function CurrencySettings({
       code: currency.code,
       symbol: currency.symbol,
     });
+
+    setEditingCurrencyErrors({});
   };
 
   const handleUpdateCurrency = async () => {
-    if (!editingCurrencyId) {
+    if (!editingCurrencyId || isUpdating || isAdding) {
       return;
     }
 
-    const result = await updateCurrency(editingCurrencyId, editingCurrency);
+    setIsUpdating(true);
 
-    if (!result.success) {
-      toast.error(result.message);
+    try {
+      const result = await updateCurrency(editingCurrencyId, editingCurrency);
+
+      if (!result.success) {
+        setEditingCurrencyErrors(result.fieldErrors);
+        toast.error(result.message);
+        return;
+      }
+
+      if (!result.currency) {
+        toast.error('Currency details could not be retrieved.');
+        return;
+      }
+
+      setCurrencies((currentCurrencies) =>
+        currentCurrencies.map((currency) =>
+          currency.id === editingCurrencyId ? result.currency! : currency,
+        ),
+      );
+
+      setEditingCurrencyId(null);
+      setEditingCurrency(emptyCurrency);
+      setEditingCurrencyErrors({});
+
+      toast.success(result.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelEditing = () => {
+    if (isUpdating) {
       return;
     }
-
-    if (!result.currency) {
-      toast.error('Currency details could not be retrieved.');
-      return;
-    }
-
-    setCurrencies((currentCurrencies) =>
-      currentCurrencies.map((currency) =>
-        currency.id === editingCurrencyId ? result.currency : currency,
-      ),
-    );
 
     setEditingCurrencyId(null);
-
-    setEditingCurrency({
-      name: '',
-      code: '',
-      symbol: '',
-    });
-
-    toast.success(result.message);
+    setEditingCurrency(emptyCurrency);
+    setEditingCurrencyErrors({});
   };
 
   return (
@@ -157,196 +232,290 @@ export function CurrencySettings({
                 </TableHeader>
 
                 <TableBody>
-                  {currencies.map((currency) => (
-                    <TableRow key={currency.id}>
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCurrencyId === currency.id
-                              ? editingCurrency.symbol
-                              : currency.symbol
-                          }
-                          readOnly={editingCurrencyId !== currency.id}
-                          onChange={(event) =>
-                            editingCurrencyId === currency.id &&
-                            setEditingCurrency((current) => ({
-                              ...current,
-                              symbol: event.target.value,
-                            }))
-                          }
-                          className="h-9 bg-background"
-                          maxLength={10}
-                        />
-                      </TableCell>
+                  {currencies.map((currency) => {
+                    const isEditing = editingCurrencyId === currency.id;
 
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCurrencyId === currency.id
-                              ? editingCurrency.code
-                              : currency.code
-                          }
-                          readOnly={editingCurrencyId !== currency.id}
-                          onChange={(event) =>
-                            editingCurrencyId === currency.id &&
-                            setEditingCurrency((current) => ({
-                              ...current,
-                              code: event.target.value.toUpperCase(),
-                            }))
-                          }
-                          className="h-9 bg-background text-xs uppercase"
-                          maxLength={3}
-                        />
-                      </TableCell>
+                    return (
+                      <TableRow key={currency.id}>
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing
+                                ? editingCurrency.symbol
+                                : currency.symbol
+                            }
+                            readOnly={!isEditing}
+                            disabled={isAdding || isUpdating}
+                            onChange={(event) =>
+                              handleEditingCurrencyChange(
+                                'symbol',
+                                event.target.value,
+                              )
+                            }
+                            className="h-9 bg-background"
+                            maxLength={10}
+                            aria-invalid={
+                              isEditing && !!editingCurrencyErrors.symbol
+                            }
+                            aria-describedby={
+                              isEditing && editingCurrencyErrors.symbol
+                                ? `currency-${currency.id}-symbol-error`
+                                : undefined
+                            }
+                          />
 
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCurrencyId === currency.id
-                              ? editingCurrency.name
-                              : currency.name
-                          }
-                          readOnly={editingCurrencyId !== currency.id}
-                          onChange={(event) =>
-                            editingCurrencyId === currency.id &&
-                            setEditingCurrency((current) => ({
-                              ...current,
-                              name: event.target.value,
-                            }))
-                          }
-                          className="h-9 bg-background"
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        {editingCurrencyId === currency.id ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-foreground"
-                              onClick={handleUpdateCurrency}
+                          {isEditing && editingCurrencyErrors.symbol && (
+                            <p
+                              id={`currency-${currency.id}-symbol-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <Check className="size-4" />
+                              {editingCurrencyErrors.symbol}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Save {currency.name}
-                              </span>
-                            </Button>
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing ? editingCurrency.code : currency.code
+                            }
+                            readOnly={!isEditing}
+                            disabled={isAdding || isUpdating}
+                            onChange={(event) =>
+                              handleEditingCurrencyChange(
+                                'code',
+                                event.target.value.toUpperCase(),
+                              )
+                            }
+                            className="h-9 bg-background text-xs uppercase"
+                            maxLength={3}
+                            aria-invalid={
+                              isEditing && !!editingCurrencyErrors.code
+                            }
+                            aria-describedby={
+                              isEditing && editingCurrencyErrors.code
+                                ? `currency-${currency.id}-code-error`
+                                : undefined
+                            }
+                          />
 
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-destructive"
-                              onClick={() => {
-                                setEditingCurrencyId(null);
-
-                                setEditingCurrency({
-                                  name: '',
-                                  code: '',
-                                  symbol: '',
-                                });
-                              }}
+                          {isEditing && editingCurrencyErrors.code && (
+                            <p
+                              id={`currency-${currency.id}-code-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <X className="size-4" />
+                              {editingCurrencyErrors.code}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Cancel editing {currency.name}
-                              </span>
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleEditCurrency(currency)}
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing ? editingCurrency.name : currency.name
+                            }
+                            readOnly={!isEditing}
+                            disabled={isAdding || isUpdating}
+                            onChange={(event) =>
+                              handleEditingCurrencyChange(
+                                'name',
+                                event.target.value,
+                              )
+                            }
+                            className="h-9 bg-background"
+                            aria-invalid={
+                              isEditing && !!editingCurrencyErrors.name
+                            }
+                            aria-describedby={
+                              isEditing && editingCurrencyErrors.name
+                                ? `currency-${currency.id}-name-error`
+                                : undefined
+                            }
+                          />
+
+                          {isEditing && editingCurrencyErrors.name && (
+                            <p
+                              id={`currency-${currency.id}-name-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <Pencil className="size-4" />
+                              {editingCurrencyErrors.name}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Edit {currency.name}
-                              </span>
-                            </Button>
+                        <TableCell>
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-foreground"
+                                onClick={handleUpdateCurrency}
+                                disabled={isUpdating || isAdding}
+                              >
+                                <Check className="size-4" />
 
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteCurrency(currency)}
-                            >
-                              <Trash2 className="size-4" />
+                                <span className="sr-only">
+                                  {isUpdating
+                                    ? `Saving ${currency.name}`
+                                    : `Save ${currency.name}`}
+                                </span>
+                              </Button>
 
-                              <span className="sr-only">
-                                Delete {currency.name}
-                              </span>
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-destructive"
+                                onClick={handleCancelEditing}
+                                disabled={isUpdating}
+                              >
+                                <X className="size-4" />
+
+                                <span className="sr-only">
+                                  Cancel editing {currency.name}
+                                </span>
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleEditCurrency(currency)}
+                                disabled={isAdding || isUpdating}
+                              >
+                                <Pencil className="size-4" />
+
+                                <span className="sr-only">
+                                  Edit {currency.name}
+                                </span>
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => setDeleteCurrency(currency)}
+                                disabled={isAdding || isUpdating}
+                              >
+                                <Trash2 className="size-4" />
+
+                                <span className="sr-only">
+                                  Delete {currency.name}
+                                </span>
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
 
                   <TableRow className="bg-muted/20 hover:bg-muted/20">
                     <TableCell>
                       <Input
                         value={newCurrency.symbol}
                         onChange={(event) =>
-                          setNewCurrency((current) => ({
-                            ...current,
-                            symbol: event.target.value,
-                          }))
+                          handleNewCurrencyChange('symbol', event.target.value)
                         }
-                        placeholder="e.g., ₹"
+                        placeholder="e.g. ₹"
                         className="h-9"
                         maxLength={10}
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCurrencyErrors.symbol}
+                        aria-describedby={
+                          newCurrencyErrors.symbol
+                            ? 'new-currency-symbol-error'
+                            : undefined
+                        }
                       />
+
+                      {newCurrencyErrors.symbol && (
+                        <p
+                          id="new-currency-symbol-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCurrencyErrors.symbol}
+                        </p>
+                      )}
                     </TableCell>
 
                     <TableCell>
                       <Input
                         value={newCurrency.code}
                         onChange={(event) =>
-                          setNewCurrency((current) => ({
-                            ...current,
-                            code: event.target.value.toUpperCase(),
-                          }))
+                          handleNewCurrencyChange(
+                            'code',
+                            event.target.value.toUpperCase(),
+                          )
                         }
-                        placeholder="e.g., INR"
+                        placeholder="e.g. INR"
                         className="h-9 text-xs"
                         maxLength={3}
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCurrencyErrors.code}
+                        aria-describedby={
+                          newCurrencyErrors.code
+                            ? 'new-currency-code-error'
+                            : undefined
+                        }
                       />
+
+                      {newCurrencyErrors.code && (
+                        <p
+                          id="new-currency-code-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCurrencyErrors.code}
+                        </p>
+                      )}
                     </TableCell>
 
                     <TableCell>
                       <Input
                         value={newCurrency.name}
                         onChange={(event) =>
-                          setNewCurrency((current) => ({
-                            ...current,
-                            name: event.target.value,
-                          }))
+                          handleNewCurrencyChange('name', event.target.value)
                         }
-                        placeholder="e.g., Indian Rupee"
+                        placeholder="e.g. Indian Rupee"
                         className="h-9"
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCurrencyErrors.name}
+                        aria-describedby={
+                          newCurrencyErrors.name
+                            ? 'new-currency-name-error'
+                            : undefined
+                        }
                       />
+
+                      {newCurrencyErrors.name && (
+                        <p
+                          id="new-currency-name-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCurrencyErrors.name}
+                        </p>
+                      )}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="p-5 flex items-center">
                       <Button
                         type="button"
                         size="icon"
                         className="size-9 rounded-full"
                         onClick={handleAddCurrency}
+                        disabled={isAdding || isUpdating}
                       >
                         <Plus className="size-4" />
 
-                        <span className="sr-only">Add currency</span>
+                        <span className="sr-only">
+                          {isAdding ? 'Adding currency' : 'Add currency'}
+                        </span>
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -373,12 +542,8 @@ export function CurrencySettings({
 
           if (editingCurrencyId === currencyId) {
             setEditingCurrencyId(null);
-
-            setEditingCurrency({
-              name: '',
-              code: '',
-              symbol: '',
-            });
+            setEditingCurrency(emptyCurrency);
+            setEditingCurrencyErrors({});
           }
         }}
       />

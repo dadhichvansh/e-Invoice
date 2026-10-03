@@ -7,7 +7,7 @@ import {
   EMAIL_CHANGE_VERIFICATION_CODE_RESEND_COOLDOWN_MS,
 } from '@/lib/constants/authentication';
 import { generateCode, hashCode } from '@/lib/authentication/verificationCode';
-import { RequestEmailChangeSchema } from '@/lib/validators/settings';
+import { requestEmailChangeSchema } from '@/lib/validators/settings';
 import { sendEmailChangeCode } from '@/services/email.service';
 
 type RequestEmailChangeResult =
@@ -30,7 +30,7 @@ export async function requestEmailChange(
   try {
     const { user } = await requireAuthentication();
 
-    const result = RequestEmailChangeSchema.safeParse(input);
+    const result = requestEmailChangeSchema.safeParse(input);
 
     if (!result.success) {
       return {

@@ -32,6 +32,10 @@ export function DeleteInvoiceCategoryDialog({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
+    if (isDeleting) {
+      return;
+    }
+
     setIsDeleting(true);
 
     try {

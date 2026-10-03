@@ -5,13 +5,13 @@ import { clearAuthCookies } from '@/lib/authentication/cookies';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
 import { hashCode } from '@/lib/authentication/verificationCode';
 import { EMAIL_CHANGE_MAX_ATTEMPTS } from '@/lib/constants/authentication';
-import { VerifyEmailChangeSchema } from '@/lib/validators/settings';
+import { verifyEmailChangeSchema } from '@/lib/validators/settings';
 
 export async function verifyEmailChange(input: unknown) {
   try {
     const { user } = await requireAuthentication();
 
-    const result = VerifyEmailChangeSchema.safeParse(input);
+    const result = verifyEmailChangeSchema.safeParse(input);
 
     if (!result.success) {
       return {

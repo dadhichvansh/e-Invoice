@@ -5,11 +5,13 @@ import { Textarea } from '@/components/ui/textarea';
 interface DefaultInvoiceNotesProps {
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 }
 
 export function DefaultInvoiceNotes({
   value,
   onChange,
+  error,
 }: DefaultInvoiceNotesProps) {
   return (
     <Card className="rounded-2xl">
@@ -35,7 +37,15 @@ export function DefaultInvoiceNotes({
             onChange={(event) => onChange(event.target.value)}
             placeholder="e.g., Thank you for your business."
             rows={5}
+            aria-invalid={!!error}
+            aria-describedby={error ? 'default-notes-error' : undefined}
           />
+
+          {error && (
+            <p id="default-notes-error" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

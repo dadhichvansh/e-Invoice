@@ -10,15 +10,44 @@ import {
 } from '@/lib/validators/invoiceCategory';
 import { Prisma } from '@/lib/db/generated/prisma/client';
 
-export async function createInvoiceCategory(input: InvoiceCategoryInput) {
+type InvoiceCategoryFieldErrors = Partial<
+  Record<keyof InvoiceCategoryInput, string>
+>;
+
+type InvoiceCategoryResult =
+  | {
+      success: true;
+      message: string;
+      category?: Awaited<ReturnType<typeof prisma.invoiceCategory.create>>;
+    }
+  | {
+      success: false;
+      message: string;
+      fieldErrors: InvoiceCategoryFieldErrors;
+    };
+
+export async function createInvoiceCategory(
+  input: unknown,
+): Promise<InvoiceCategoryResult> {
   const { user } = await requireAuthentication();
 
   const validatedInput = invoiceCategorySchema.safeParse(input);
 
   if (!validatedInput.success) {
+    const fieldErrors: InvoiceCategoryFieldErrors = {};
+
+    for (const issue of validatedInput.error.issues) {
+      const field = issue.path[0];
+
+      if (typeof field === 'string' && !(field in fieldErrors)) {
+        fieldErrors[field as keyof InvoiceCategoryInput] = issue.message;
+      }
+    }
+
     return {
       success: false,
-      message: validatedInput.error.issues[0]?.message ?? 'Invalid category.',
+      message: 'Please correct the highlighted fields.',
+      fieldErrors,
     };
   }
 
@@ -28,8 +57,8 @@ export async function createInvoiceCategory(input: InvoiceCategoryInput) {
     const category = await prisma.invoiceCategory.create({
       data: {
         userId: user.id,
-        name: name,
-        code: code,
+        name,
+        code,
         description: description || null,
       },
     });
@@ -49,6 +78,7 @@ export async function createInvoiceCategory(input: InvoiceCategoryInput) {
       return {
         success: false,
         message: 'A category with this code already exists.',
+        fieldErrors: {},
       };
     }
 
@@ -58,16 +88,27 @@ export async function createInvoiceCategory(input: InvoiceCategoryInput) {
 
 export async function updateInvoiceCategory(
   id: string,
-  input: InvoiceCategoryInput,
-) {
+  input: unknown,
+): Promise<InvoiceCategoryResult> {
   const { user } = await requireAuthentication();
 
   const validatedInput = invoiceCategorySchema.safeParse(input);
 
   if (!validatedInput.success) {
+    const fieldErrors: InvoiceCategoryFieldErrors = {};
+
+    for (const issue of validatedInput.error.issues) {
+      const field = issue.path[0];
+
+      if (typeof field === 'string' && !(field in fieldErrors)) {
+        fieldErrors[field as keyof InvoiceCategoryInput] = issue.message;
+      }
+    }
+
     return {
       success: false,
-      message: validatedInput.error.issues[0]?.message ?? 'Invalid category.',
+      message: 'Please correct the highlighted fields.',
+      fieldErrors,
     };
   }
 
@@ -80,8 +121,8 @@ export async function updateInvoiceCategory(
         userId: user.id,
       },
       data: {
-        name: name,
-        code: code,
+        name,
+        code,
         description: description || null,
       },
     });
@@ -101,6 +142,7 @@ export async function updateInvoiceCategory(
       return {
         success: false,
         message: 'A category with this code already exists.',
+        fieldErrors: {},
       };
     }
 

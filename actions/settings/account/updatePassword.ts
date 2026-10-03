@@ -3,14 +3,14 @@
 import { prisma } from '@/lib/db/prisma';
 import { clearAuthCookies } from '@/lib/authentication/cookies';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { UpdatePasswordSchema } from '@/lib/validators/settings';
+import { updatePasswordSchema } from '@/lib/validators/settings';
 import { hashPassword, verifyPassword } from '@/lib/authentication/password';
 
 export async function updatePassword(input: unknown) {
   try {
     const { user } = await requireAuthentication();
 
-    const result = UpdatePasswordSchema.safeParse(input);
+    const result = updatePasswordSchema.safeParse(input);
 
     if (!result.success) {
       return {

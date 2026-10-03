@@ -34,31 +34,13 @@ export async function updatePaymentMethod(input: unknown) {
   const { user } = await requireAuthentication();
 
   try {
-    const result = paymentMethodSchema
-      .extend({
-        id: paymentMethodSchema.shape.name.transform(() => '').optional(),
-      })
-      .safeParse(input);
-
-    if (!result.success) {
-      return {
-        success: false,
-        message: 'Please correct the highlighted fields.',
-        fieldErrors: {},
-      };
-    }
-
-    const { name, type, details, isDefault } = result.data;
-
-    const paymentMethodId =
-      typeof input === 'object' &&
-      input !== null &&
-      'id' in input &&
-      typeof input.id === 'string'
-        ? input.id
-        : '';
-
-    if (!paymentMethodId) {
+    if (
+      typeof input !== 'object' ||
+      input === null ||
+      !('id' in input) ||
+      typeof input.id !== 'string' ||
+      !input.id.trim()
+    ) {
       return {
         success: false,
         message: 'Payment method not found.',
@@ -67,6 +49,43 @@ export async function updatePaymentMethod(input: unknown) {
         },
       };
     }
+
+    const paymentMethodId = input.id;
+
+    const result = paymentMethodSchema.safeParse(input);
+
+    if (!result.success) {
+      const fieldErrors: PaymentMethodFieldErrors = {};
+
+      for (const issue of result.error.issues) {
+        const [field, detailField] = issue.path;
+
+        if (field === 'name' || field === 'type' || field === 'isDefault') {
+          fieldErrors[field] ??= [];
+          fieldErrors[field].push(issue.message);
+
+          continue;
+        }
+
+        if (field === 'details' && typeof detailField === 'string') {
+          fieldErrors.details ??= {};
+          fieldErrors.details[
+            detailField as keyof PaymentMethodDetailsFieldErrors
+          ] ??= [];
+          fieldErrors.details[
+            detailField as keyof PaymentMethodDetailsFieldErrors
+          ]!.push(issue.message);
+        }
+      }
+
+      return {
+        success: false,
+        message: 'Please correct the highlighted fields.',
+        fieldErrors,
+      };
+    }
+
+    const { name, type, details, isDefault } = result.data;
 
     const existingPaymentMethod = await prisma.paymentMethod.findFirst({
       where: {

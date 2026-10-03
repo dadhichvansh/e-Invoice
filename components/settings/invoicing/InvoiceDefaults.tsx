@@ -23,6 +23,14 @@ interface InvoiceDefaultsProps {
     symbol: string;
   }[];
 
+  errors?: {
+    invoicePrefix?: string;
+    defaultCurrency?: string;
+    defaultPaymentTerms?: string;
+  };
+
+  isSaving: boolean;
+
   onChange: (
     field: 'invoicePrefix' | 'defaultCurrency' | 'defaultPaymentTerms',
     value: string,
@@ -32,6 +40,8 @@ interface InvoiceDefaultsProps {
 export function InvoiceDefaults({
   data,
   currencies,
+  errors,
+  isSaving,
   onChange,
 }: InvoiceDefaultsProps) {
   return (
@@ -60,12 +70,23 @@ export function InvoiceDefaults({
               onChange={(event) =>
                 onChange('invoicePrefix', event.target.value)
               }
-              placeholder="e.g., INV"
+              placeholder="e.g. INV"
+              disabled={isSaving}
+              aria-invalid={!!errors?.invoicePrefix}
+              aria-describedby={
+                errors?.invoicePrefix ? 'invoice-prefix-error' : undefined
+              }
             />
 
-            <p className="text-xs text-muted-foreground">
-              Used at the beginning of generated invoice numbers.
-            </p>
+            {errors?.invoicePrefix ? (
+              <p id="invoice-prefix-error" className="text-sm text-destructive">
+                {errors.invoicePrefix}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Used at the beginning of generated invoice numbers.
+              </p>
+            )}
           </div>
 
           {/* Currency */}
@@ -79,9 +100,16 @@ export function InvoiceDefaults({
                   onChange('defaultCurrency', value);
                 }
               }}
-              disabled={currencies.length === 0}
+              disabled={isSaving || currencies.length === 0}
             >
-              <SelectTrigger id="default-currency" className="w-full">
+              <SelectTrigger
+                id="default-currency"
+                className="w-full"
+                aria-invalid={!!errors?.defaultCurrency}
+                aria-describedby={
+                  errors?.defaultCurrency ? 'default-currency-error' : undefined
+                }
+              >
                 <SelectValue
                   placeholder={
                     currencies.length === 0
@@ -110,7 +138,14 @@ export function InvoiceDefaults({
               </SelectContent>
             </Select>
 
-            {currencies.length === 0 ? (
+            {errors?.defaultCurrency ? (
+              <p
+                id="default-currency-error"
+                className="text-sm text-destructive"
+              >
+                {errors.defaultCurrency}
+              </p>
+            ) : currencies.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 Add at least one currency in the Currencies section before
                 selecting a default currency.
@@ -135,7 +170,14 @@ export function InvoiceDefaults({
                 onChange={(event) =>
                   onChange('defaultPaymentTerms', event.target.value)
                 }
-                placeholder="e.g., 7"
+                placeholder="e.g. 15"
+                disabled={isSaving}
+                aria-invalid={!!errors?.defaultPaymentTerms}
+                aria-describedby={
+                  errors?.defaultPaymentTerms
+                    ? 'default-payment-terms-error'
+                    : undefined
+                }
               />
 
               <span className="shrink-0 text-sm text-muted-foreground">
@@ -143,13 +185,22 @@ export function InvoiceDefaults({
               </span>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Invoices will be due{' '}
-              {data.defaultPaymentTerms
-                ? `${data.defaultPaymentTerms} days`
-                : 'after the specified number of days'}{' '}
-              after they are issued.
-            </p>
+            {errors?.defaultPaymentTerms ? (
+              <p
+                id="default-payment-terms-error"
+                className="text-sm text-destructive"
+              >
+                {errors.defaultPaymentTerms}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Invoices will be due{' '}
+                {data.defaultPaymentTerms
+                  ? `${data.defaultPaymentTerms} days`
+                  : 'after the specified number of days'}{' '}
+                after they are issued.
+              </p>
+            )}
           </div>
         </div>
       </CardContent>

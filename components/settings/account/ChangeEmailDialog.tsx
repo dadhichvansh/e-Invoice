@@ -20,6 +20,12 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../ui/input-otp';
 import { requestEmailChange } from '@/actions/settings/account/requestEmailChange';
 import { verifyEmailChange } from '@/actions/settings/account/verifyEmailChange';
 
+import {
+  requestEmailChangeSchema,
+  verifyEmailChangeSchema,
+} from '@/lib/validators/settings';
+import { EMAIL_CHANGE_VERIFICATION_CODE_EXPIRY_MS } from '@/lib/constants/authentication';
+
 interface ChangeEmailDialogProps {
   currentEmail: string;
   open: boolean;
@@ -33,20 +39,28 @@ export function ChangeEmailDialog({
   open,
   onOpenChange,
 }: ChangeEmailDialogProps) {
+  const router = useRouter();
+
   const [step, setStep] = useState<Step>('email');
   const [newEmail, setNewEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | undefined>();
+
   const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState<string | undefined>();
+
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+  const [isRequestingCode, startRequestTransition] = useTransition();
+  const [isVerifyingCode, startVerifyTransition] = useTransition();
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setStep('email');
       setNewEmail('');
+      setEmailError(undefined);
       setCode('');
+      setCodeError(undefined);
       setVerificationId(null);
       setCooldown(0);
     }
@@ -66,8 +80,84 @@ export function ChangeEmailDialog({
     return () => window.clearInterval(timer);
   }, [cooldown]);
 
+  const validateEmail = () => {
+    const result = requestEmailChangeSchema.safeParse({
+      newEmail,
+    });
+
+    if (!result.success) {
+      const error = result.error.issues[0].message;
+
+      setEmailError(error ?? 'Please enter a valid email address.');
+      return false;
+    }
+
+    setEmailError(undefined);
+    return true;
+  };
+
+  const handleEmailChange = (value: string) => {
+    setNewEmail(value);
+
+    if (emailError) {
+      const result = requestEmailChangeSchema.safeParse({
+        newEmail: value,
+      });
+
+      if (result.success) {
+        setEmailError(undefined);
+      }
+    }
+  };
+
+  const handleEmailBlur = () => {
+    if (!newEmail.trim()) {
+      return;
+    }
+
+    validateEmail();
+  };
+
+  const validateCode = () => {
+    const result = verifyEmailChangeSchema.safeParse({
+      verificationId: verificationId ?? '',
+      code,
+    });
+
+    if (!result.success) {
+      const error = result.error.issues[0].message;
+
+      setCodeError(error ?? 'Please enter a valid 6-digit verification code.');
+      return false;
+    }
+
+    setCodeError(undefined);
+    return true;
+  };
+
+  const handleCodeChange = (value: string) => {
+    setCode(value);
+
+    if (codeError) {
+      const result = verifyEmailChangeSchema.safeParse({
+        verificationId: verificationId ?? '',
+        code: value,
+      });
+
+      if (result.success) {
+        setCodeError(undefined);
+      }
+    }
+  };
+
   const handleRequestCode = () => {
-    startTransition(async () => {
+    const isValid = validateEmail();
+
+    if (!isValid) {
+      return;
+    }
+
+    startRequestTransition(async () => {
       const result = await requestEmailChange({
         newEmail,
       });
@@ -95,7 +185,13 @@ export function ChangeEmailDialog({
       return;
     }
 
-    startTransition(async () => {
+    const isValid = validateCode();
+
+    if (!isValid) {
+      return;
+    }
+
+    startVerifyTransition(async () => {
       const result = await verifyEmailChange({
         verificationId,
         code,
@@ -114,20 +210,28 @@ export function ChangeEmailDialog({
   };
 
   const handleBack = () => {
-    if (isPending) {
+    if (isRequestingCode || isVerifyingCode) {
       return;
     }
 
     setStep('email');
     setCode('');
+    setCodeError(undefined);
   };
 
   const handleResend = () => {
-    if (cooldown > 0 || isPending) {
+    if (cooldown > 0 || isRequestingCode || isVerifyingCode) {
       return;
     }
 
-    startTransition(async () => {
+    const isValid = validateEmail();
+
+    if (!isValid) {
+      setStep('email');
+      return;
+    }
+
+    startRequestTransition(async () => {
       const result = await requestEmailChange({
         newEmail,
       });
@@ -145,9 +249,18 @@ export function ChangeEmailDialog({
       setVerificationId(result.verificationId);
       setCooldown(result.cooldownSeconds ?? 60);
       setCode('');
+      setCodeError(undefined);
 
       toast.success(result.message);
     });
+  };
+
+  const handleCancel = () => {
+    if (isRequestingCode || isVerifyingCode) {
+      return;
+    }
+
+    handleOpenChange(false);
   };
 
   return (
@@ -178,19 +291,28 @@ export function ChangeEmailDialog({
                   id="new-email"
                   type="email"
                   value={newEmail}
-                  onChange={(event) => setNewEmail(event.target.value)}
-                  placeholder="you@example.com"
+                  onChange={(event) => handleEmailChange(event.target.value)}
+                  onBlur={handleEmailBlur}
+                  placeholder="e.g. john.doe@example.com"
                   autoComplete="email"
-                  disabled={isPending}
+                  disabled={isRequestingCode || isVerifyingCode}
+                  aria-invalid={!!emailError}
+                  aria-describedby={emailError ? 'new-email-error' : undefined}
                 />
+
+                {emailError && (
+                  <p id="new-email-error" className="text-sm text-destructive">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isPending}
+                  onClick={handleCancel}
+                  disabled={isRequestingCode || isVerifyingCode}
                 >
                   Cancel
                 </Button>
@@ -198,9 +320,9 @@ export function ChangeEmailDialog({
                 <Button
                   type="button"
                   onClick={handleRequestCode}
-                  disabled={!newEmail.trim() || isPending}
+                  disabled={isRequestingCode}
                 >
-                  {isPending ? 'Sending code...' : 'Send code'}
+                  {isRequestingCode ? 'Sending code...' : 'Send code'}
                 </Button>
               </div>
             </div>
@@ -216,26 +338,32 @@ export function ChangeEmailDialog({
 
               <DialogDescription>
                 We&apos;ve sent a 6-digit verification code to{' '}
-                <span className="font-medium text-foreground">{newEmail}</span>.
+                <span className="font-medium text-foreground">{newEmail}</span>{' '}
+                (Expires in{' '}
+                {EMAIL_CHANGE_VERIFICATION_CODE_EXPIRY_MS / 1000 / 60} minutes).
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-5">
               <div className="space-y-3">
                 <Label htmlFor="email-verification-code">
-                  Verification code
+                  Enter your verification code below
                 </Label>
 
-                <div className="flex justify-center">
+                <div className="flex justify-center py-2">
                   <InputOTP
                     maxLength={6}
                     value={code}
-                    onChange={setCode}
-                    disabled={isPending}
+                    onChange={handleCodeChange}
+                    disabled={isRequestingCode || isVerifyingCode}
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     autoFocus
                     containerClassName="w-full"
+                    aria-invalid={!!codeError}
+                    aria-describedby={
+                      codeError ? 'email-verification-code-error' : undefined
+                    }
                   >
                     <InputOTPGroup className="w-full justify-around gap-2">
                       {Array.from({ length: 6 }, (_, index) => (
@@ -248,22 +376,35 @@ export function ChangeEmailDialog({
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
+
+                {codeError && (
+                  <p
+                    id="email-verification-code-error"
+                    className="text-center text-sm text-destructive"
+                  >
+                    {codeError}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={cooldown > 0 || isPending}
+                  disabled={cooldown > 0 || isRequestingCode || isVerifyingCode}
                   className="text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+                  {cooldown > 0
+                    ? `Resend code in ${cooldown}s`
+                    : isRequestingCode
+                      ? 'Requesting code...'
+                      : 'Resend code'}
                 </button>
 
                 <button
                   type="button"
                   onClick={handleBack}
-                  disabled={isPending}
+                  disabled={isRequestingCode || isVerifyingCode}
                   className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
                 >
                   <ArrowLeft className="size-3.5" />
@@ -275,8 +416,8 @@ export function ChangeEmailDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isPending}
+                  onClick={handleCancel}
+                  disabled={isRequestingCode || isVerifyingCode}
                 >
                   Cancel
                 </Button>
@@ -284,9 +425,9 @@ export function ChangeEmailDialog({
                 <Button
                   type="button"
                   onClick={handleVerifyCode}
-                  disabled={code.length !== 6 || isPending}
+                  disabled={isVerifyingCode || isRequestingCode}
                 >
-                  {isPending ? 'Verifying...' : 'Verify'}
+                  {isVerifyingCode ? 'Verifying...' : 'Verify'}
                 </Button>
               </div>
             </div>

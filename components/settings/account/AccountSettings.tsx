@@ -14,20 +14,69 @@ import { ChangePasswordDialog } from './ChangePasswordDialog';
 
 import { updateName } from '@/actions/settings/account/updateName';
 
+import { updateNameSchema } from '@/lib/validators/settings';
+
 interface AccountSettingsProps {
   name: string;
   email: string;
 }
 
 export function AccountSettings({ name, email }: AccountSettingsProps) {
+  const router = useRouter();
+
   const [accountName, setAccountName] = useState(name);
+  const [nameError, setNameError] = useState<string | undefined>();
+
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
+
+  const validateName = () => {
+    const result = updateNameSchema.safeParse({
+      name: accountName,
+    });
+
+    if (!result.success) {
+      const error = result.error.issues[0].message;
+
+      setNameError(error ?? 'Please enter a valid name.');
+      return false;
+    }
+
+    setNameError(undefined);
+    return true;
+  };
+
+  const handleNameChange = (value: string) => {
+    setAccountName(value);
+
+    if (nameError) {
+      const result = updateNameSchema.safeParse({
+        name: value,
+      });
+
+      if (result.success) {
+        setNameError(undefined);
+      }
+    }
+  };
+
+  const handleNameBlur = () => {
+    if (!accountName.trim()) {
+      return;
+    }
+
+    validateName();
+  };
 
   const handleSaveChanges = () => {
+    const isValid = validateName();
+
+    if (!isValid) {
+      return;
+    }
+
     startTransition(async () => {
       const result = await updateName({
         name: accountName,
@@ -42,6 +91,8 @@ export function AccountSettings({ name, email }: AccountSettingsProps) {
       router.refresh();
     });
   };
+
+  const isNameUnchanged = accountName.trim() === name;
 
   return (
     <>
@@ -66,17 +117,26 @@ export function AccountSettings({ name, email }: AccountSettingsProps) {
             <Input
               id="account-name"
               value={accountName}
-              onChange={(event) => setAccountName(event.target.value)}
-              placeholder="Your name"
+              onChange={(event) => handleNameChange(event.target.value)}
+              onBlur={handleNameBlur}
+              placeholder="e.g. John Doe"
               disabled={isPending}
+              aria-invalid={!!nameError}
+              aria-describedby={nameError ? 'account-name-error' : undefined}
             />
+
+            {nameError && (
+              <p id="account-name-error" className="text-sm text-destructive">
+                {nameError}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end">
             <Button
               type="button"
               onClick={handleSaveChanges}
-              disabled={isPending || accountName.trim() === name}
+              disabled={isPending || isNameUnchanged}
             >
               {isPending ? 'Saving...' : 'Save changes'}
             </Button>
@@ -99,21 +159,19 @@ export function AccountSettings({ name, email }: AccountSettingsProps) {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              id="account-email"
-              type="email"
-              value={email}
-              readOnly
-              className="min-w-0"
-            />
+          <div className="flex flex-col items-end justify-between gap-2 sm:flex-row">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="account-email">Email</Label>
+
+              <Input id="account-email" type="email" value={email} readOnly />
+            </div>
 
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsEmailDialogOpen(true)}
             >
-              Change
+              Change email
             </Button>
           </div>
 
@@ -138,16 +196,17 @@ export function AccountSettings({ name, email }: AccountSettingsProps) {
           </div>
         </CardHeader>
 
-        <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Account password
-              </p>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col items-end justify-between gap-2 sm:flex-row">
+            <div className="space-y-2 w-full">
+              <Label htmlFor="account-password">Password</Label>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Use a strong password to keep your account secure.
-              </p>
+              <Input
+                id="account-password"
+                type="password"
+                value="•••••••••••"
+                readOnly
+              />
             </div>
 
             <Button
@@ -158,6 +217,10 @@ export function AccountSettings({ name, email }: AccountSettingsProps) {
               Change password
             </Button>
           </div>
+
+          <p className="mt-1 text-xs text-muted-foreground">
+            Use a strong password to keep your account secure.
+          </p>
         </CardContent>
       </Card>
 

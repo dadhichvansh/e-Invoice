@@ -9,8 +9,8 @@ export const invoiceCategorySchema = z.object({
   code: z
     .string()
     .trim()
-    .min(1, 'Category code is required.')
-    .max(3, 'Category code must be 3 characters or less.')
+    .toUpperCase()
+    .length(3, 'Category code must be exactly 3 characters.')
     .regex(
       /^[A-Z0-9]+$/,
       'Category code can only contain uppercase letters and numbers.',
@@ -18,9 +18,8 @@ export const invoiceCategorySchema = z.object({
   description: z
     .string()
     .trim()
-    .max(255, 'Description must be 255 characters or less.')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'Description is required.')
+    .max(255, 'Description must be 255 characters or less.'),
 });
 
 export type InvoiceCategoryInput = z.infer<typeof invoiceCategorySchema>;

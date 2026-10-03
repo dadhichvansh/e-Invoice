@@ -1,3 +1,5 @@
+'use client';
+
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -13,11 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+import { DeleteInvoiceCategoryDialog } from './DeleteInvoiceCategoryDialog';
+
 import {
   createInvoiceCategory,
   updateInvoiceCategory,
 } from '@/actions/settings/invoicing/invoiceCategory';
-import { DeleteInvoiceCategoryDialog } from './DeleteInvoiceCategoryDialog';
 
 interface InvoiceCategoriesProps {
   categories: {
@@ -31,45 +35,105 @@ interface InvoiceCategoriesProps {
   }[];
 }
 
+interface CategoryFormData {
+  name: string;
+  code: string;
+  description: string;
+}
+
+type CategoryField = keyof CategoryFormData;
+
+type CategoryErrors = Partial<Record<CategoryField, string | undefined>>;
+
+const emptyCategory: CategoryFormData = {
+  name: '',
+  code: '',
+  description: '',
+};
+
 export function InvoiceCategories({ categories }: InvoiceCategoriesProps) {
-  const [newCategory, setNewCategory] = useState({
-    name: '',
-    code: '',
-    description: '',
-  });
+  const [newCategory, setNewCategory] =
+    useState<CategoryFormData>(emptyCategory);
 
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null,
   );
 
-  const [editingCategory, setEditingCategory] = useState({
-    name: '',
-    code: '',
-    description: '',
-  });
+  const [editingCategory, setEditingCategory] =
+    useState<CategoryFormData>(emptyCategory);
+
+  const [newCategoryErrors, setNewCategoryErrors] = useState<CategoryErrors>(
+    {},
+  );
+
+  const [editingCategoryErrors, setEditingCategoryErrors] =
+    useState<CategoryErrors>({});
+
+  const [isAdding, setIsAdding] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const [deleteCategory, setDeleteCategory] = useState<
     (typeof categories)[number] | null
   >(null);
 
-  const handleAddCategory = async () => {
-    const result = await createInvoiceCategory(newCategory);
+  const handleNewCategoryChange = (field: CategoryField, value: string) => {
+    setNewCategory((current) => ({
+      ...current,
+      [field]: value,
+    }));
 
-    if (!result.success) {
-      toast.error(result.message);
+    if (newCategoryErrors[field]) {
+      setNewCategoryErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const handleEditingCategoryChange = (field: CategoryField, value: string) => {
+    setEditingCategory((current) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    if (editingCategoryErrors[field]) {
+      setEditingCategoryErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (isAdding || isUpdating) {
       return;
     }
 
-    setNewCategory({
-      name: '',
-      code: '',
-      description: '',
-    });
+    setIsAdding(true);
 
-    toast.success(result.message);
+    try {
+      const result = await createInvoiceCategory(newCategory);
+
+      if (!result.success) {
+        setNewCategoryErrors(result.fieldErrors);
+        toast.error(result.message);
+        return;
+      }
+
+      setNewCategory(emptyCategory);
+      setNewCategoryErrors({});
+
+      toast.success(result.message);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const handleEditCategory = (category: (typeof categories)[number]) => {
+    if (isAdding || isUpdating) {
+      return;
+    }
+
     setEditingCategoryId(category.id);
 
     setEditingCategory({
@@ -77,32 +141,47 @@ export function InvoiceCategories({ categories }: InvoiceCategoriesProps) {
       code: category.code,
       description: category.description ?? '',
     });
+
+    setEditingCategoryErrors({});
   };
 
   const handleUpdateCategory = async () => {
-    if (!editingCategoryId) {
+    if (!editingCategoryId || isUpdating || isAdding) {
       return;
     }
 
-    const result = await updateInvoiceCategory(
-      editingCategoryId,
-      editingCategory,
-    );
+    setIsUpdating(true);
 
-    if (!result.success) {
-      toast.error(result.message);
+    try {
+      const result = await updateInvoiceCategory(
+        editingCategoryId,
+        editingCategory,
+      );
+
+      if (!result.success) {
+        setEditingCategoryErrors(result.fieldErrors);
+        toast.error(result.message);
+        return;
+      }
+
+      setEditingCategoryId(null);
+      setEditingCategory(emptyCategory);
+      setEditingCategoryErrors({});
+
+      toast.success(result.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelEditing = () => {
+    if (isUpdating) {
       return;
     }
 
     setEditingCategoryId(null);
-
-    setEditingCategory({
-      name: '',
-      code: '',
-      description: '',
-    });
-
-    toast.success(result.message);
+    setEditingCategory(emptyCategory);
+    setEditingCategoryErrors({});
   };
 
   return (
@@ -130,145 +209,194 @@ export function InvoiceCategories({ categories }: InvoiceCategoriesProps) {
                     <TableHead>Category name</TableHead>
                     <TableHead className="w-30">Code</TableHead>
                     <TableHead>Description</TableHead>
-
                     <TableHead className="w-14" />
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
                   {/* Existing categories */}
-                  {categories.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCategoryId === category.id
-                              ? editingCategory.name
-                              : category.name
-                          }
-                          readOnly={editingCategoryId !== category.id}
-                          onChange={(event) =>
-                            editingCategoryId === category.id &&
-                            setEditingCategory((current) => ({
-                              ...current,
-                              name: event.target.value,
-                            }))
-                          }
-                          className="h-9 bg-background"
-                        />
-                      </TableCell>
+                  {categories.map((category) => {
+                    const isEditing = editingCategoryId === category.id;
 
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCategoryId === category.id
-                              ? editingCategory.code
-                              : category.code
-                          }
-                          readOnly={editingCategoryId !== category.id}
-                          onChange={(event) =>
-                            editingCategoryId === category.id &&
-                            setEditingCategory((current) => ({
-                              ...current,
-                              code: event.target.value.toUpperCase(),
-                            }))
-                          }
-                          className="h-9 bg-background text-xs uppercase"
-                          maxLength={10}
-                        />
-                      </TableCell>
+                    return (
+                      <TableRow key={category.id}>
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing ? editingCategory.name : category.name
+                            }
+                            readOnly={!isEditing}
+                            disabled={isUpdating || isAdding}
+                            onChange={(event) =>
+                              handleEditingCategoryChange(
+                                'name',
+                                event.target.value,
+                              )
+                            }
+                            className="h-9 bg-background"
+                            aria-invalid={
+                              isEditing && !!editingCategoryErrors.name
+                            }
+                            aria-describedby={
+                              isEditing && editingCategoryErrors.name
+                                ? `category-${category.id}-name-error`
+                                : undefined
+                            }
+                          />
 
-                      <TableCell>
-                        <Input
-                          value={
-                            editingCategoryId === category.id
-                              ? editingCategory.description
-                              : (category.description ?? '')
-                          }
-                          readOnly={editingCategoryId !== category.id}
-                          onChange={(event) =>
-                            editingCategoryId === category.id &&
-                            setEditingCategory((current) => ({
-                              ...current,
-                              description: event.target.value,
-                            }))
-                          }
-                          className="h-9 bg-background"
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        {editingCategoryId === category.id ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-foreground"
-                              onClick={handleUpdateCategory}
+                          {isEditing && editingCategoryErrors.name && (
+                            <p
+                              id={`category-${category.id}-name-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <Check className="size-4" />
+                              {editingCategoryErrors.name}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Save {category.name}
-                              </span>
-                            </Button>
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing ? editingCategory.code : category.code
+                            }
+                            readOnly={!isEditing}
+                            disabled={isUpdating || isAdding}
+                            onChange={(event) =>
+                              handleEditingCategoryChange(
+                                'code',
+                                event.target.value.toUpperCase(),
+                              )
+                            }
+                            className="h-9 bg-background text-xs uppercase"
+                            maxLength={3}
+                            aria-invalid={
+                              isEditing && !!editingCategoryErrors.code
+                            }
+                            aria-describedby={
+                              isEditing && editingCategoryErrors.code
+                                ? `category-${category.id}-code-error`
+                                : undefined
+                            }
+                          />
 
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-destructive"
-                              onClick={() => {
-                                setEditingCategoryId(null);
-                                setEditingCategory({
-                                  name: '',
-                                  code: '',
-                                  description: '',
-                                });
-                              }}
+                          {isEditing && editingCategoryErrors.code && (
+                            <p
+                              id={`category-${category.id}-code-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <X className="size-4" />
+                              {editingCategoryErrors.code}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Cancel editing {category.name}
-                              </span>
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-foreground"
-                              onClick={() => handleEditCategory(category)}
+                        <TableCell>
+                          <Input
+                            value={
+                              isEditing
+                                ? editingCategory.description
+                                : (category.description ?? '')
+                            }
+                            readOnly={!isEditing}
+                            disabled={isUpdating || isAdding}
+                            onChange={(event) =>
+                              handleEditingCategoryChange(
+                                'description',
+                                event.target.value,
+                              )
+                            }
+                            className="h-9 bg-background"
+                            aria-invalid={
+                              isEditing && !!editingCategoryErrors.description
+                            }
+                            aria-describedby={
+                              isEditing && editingCategoryErrors.description
+                                ? `category-${category.id}-description-error`
+                                : undefined
+                            }
+                          />
+
+                          {isEditing && editingCategoryErrors.description && (
+                            <p
+                              id={`category-${category.id}-description-error`}
+                              className="mt-1 text-xs text-destructive"
                             >
-                              <Pencil className="size-4" />
+                              {editingCategoryErrors.description}
+                            </p>
+                          )}
+                        </TableCell>
 
-                              <span className="sr-only">
-                                Edit {category.name}
-                              </span>
-                            </Button>
+                        <TableCell>
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-foreground"
+                                onClick={handleUpdateCategory}
+                                disabled={isUpdating || isAdding}
+                              >
+                                <Check className="size-4" />
 
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-9 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteCategory(category)}
-                            >
-                              <Trash2 className="size-4" />
+                                <span className="sr-only">
+                                  {isUpdating
+                                    ? `Saving ${category.name}`
+                                    : `Save ${category.name}`}
+                                </span>
+                              </Button>
 
-                              <span className="sr-only">
-                                Delete {category.name}
-                              </span>
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-destructive"
+                                onClick={handleCancelEditing}
+                                disabled={isUpdating}
+                              >
+                                <X className="size-4" />
+
+                                <span className="sr-only">
+                                  Cancel editing {category.name}
+                                </span>
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-foreground"
+                                onClick={() => handleEditCategory(category)}
+                                disabled={isAdding || isUpdating}
+                              >
+                                <Pencil className="size-4" />
+
+                                <span className="sr-only">
+                                  Edit {category.name}
+                                </span>
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-9 text-muted-foreground hover:text-destructive"
+                                onClick={() => setDeleteCategory(category)}
+                                disabled={isAdding || isUpdating}
+                              >
+                                <Trash2 className="size-4" />
+
+                                <span className="sr-only">
+                                  Delete {category.name}
+                                </span>
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
 
                   {/* Add category */}
                   <TableRow className="bg-muted/20 hover:bg-muted/20">
@@ -276,55 +404,103 @@ export function InvoiceCategories({ categories }: InvoiceCategoriesProps) {
                       <Input
                         value={newCategory.name}
                         onChange={(event) =>
-                          setNewCategory((current) => ({
-                            ...current,
-                            name: event.target.value,
-                          }))
+                          handleNewCategoryChange('name', event.target.value)
                         }
-                        placeholder="e.g., API Development"
+                        placeholder="e.g. API Development"
                         className="h-9"
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCategoryErrors.name}
+                        aria-describedby={
+                          newCategoryErrors.name
+                            ? 'new-category-name-error'
+                            : undefined
+                        }
                       />
+
+                      {newCategoryErrors.name && (
+                        <p
+                          id="new-category-name-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCategoryErrors.name}
+                        </p>
+                      )}
                     </TableCell>
 
                     <TableCell>
                       <Input
                         value={newCategory.code}
                         onChange={(event) =>
-                          setNewCategory((current) => ({
-                            ...current,
-                            code: event.target.value.toUpperCase(),
-                          }))
+                          handleNewCategoryChange(
+                            'code',
+                            event.target.value.toUpperCase(),
+                          )
                         }
-                        placeholder="e.g., API"
+                        placeholder="e.g. API"
                         className="h-9 text-xs"
                         maxLength={3}
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCategoryErrors.code}
+                        aria-describedby={
+                          newCategoryErrors.code
+                            ? 'new-category-code-error'
+                            : undefined
+                        }
                       />
+
+                      {newCategoryErrors.code && (
+                        <p
+                          id="new-category-code-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCategoryErrors.code}
+                        </p>
+                      )}
                     </TableCell>
 
                     <TableCell>
                       <Input
                         value={newCategory.description}
                         onChange={(event) =>
-                          setNewCategory((current) => ({
-                            ...current,
-                            description: event.target.value,
-                          }))
+                          handleNewCategoryChange(
+                            'description',
+                            event.target.value,
+                          )
                         }
-                        placeholder="e.g., API development services"
+                        placeholder="e.g. API development services"
                         className="h-9"
+                        disabled={isAdding || isUpdating}
+                        aria-invalid={!!newCategoryErrors.description}
+                        aria-describedby={
+                          newCategoryErrors.description
+                            ? 'new-category-description-error'
+                            : undefined
+                        }
                       />
+
+                      {newCategoryErrors.description && (
+                        <p
+                          id="new-category-description-error"
+                          className="mt-1 text-xs text-destructive"
+                        >
+                          {newCategoryErrors.description}
+                        </p>
+                      )}
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="p-5 flex items-center">
                       <Button
                         type="button"
                         size="icon"
                         className="size-9 rounded-full"
                         onClick={handleAddCategory}
+                        disabled={isAdding || isUpdating}
                       >
                         <Plus className="size-4" />
 
-                        <span className="sr-only">Add category</span>
+                        <span className="sr-only">
+                          {isAdding ? 'Adding category' : 'Add category'}
+                        </span>
                       </Button>
                     </TableCell>
                   </TableRow>

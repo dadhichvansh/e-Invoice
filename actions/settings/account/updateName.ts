@@ -2,13 +2,13 @@
 
 import { prisma } from '@/lib/db/prisma';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { UpdateNameSchema } from '@/lib/validators/settings';
+import { updateNameSchema } from '@/lib/validators/settings';
 
 export async function updateName(input: unknown) {
   try {
     const { user } = await requireAuthentication();
 
-    const result = UpdateNameSchema.safeParse(input);
+    const result = updateNameSchema.safeParse(input);
 
     if (!result.success) {
       return {

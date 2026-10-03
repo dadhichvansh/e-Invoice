@@ -4,7 +4,7 @@ export const invoicingSettingsSchema = z.object({
   invoicePrefix: z
     .string()
     .trim()
-    .max(5, 'Invoice prefix must be 5 characters or less.')
+    .max(8, 'Invoice prefix must be 8 characters or less.')
     .optional()
     .or(z.literal('')),
   defaultCurrency: z

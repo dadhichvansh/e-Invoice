@@ -5,7 +5,6 @@ import { Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { updatePassword } from '@/actions/settings/account/updatePassword';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+import { updatePassword } from '@/actions/settings/account/updatePassword';
+
+import { updatePasswordSchema } from '@/lib/validators/settings';
+
 interface ChangePasswordDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,13 +27,19 @@ interface ChangePasswordDialogProps {
 
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
 
+type PasswordErrors = Partial<Record<PasswordField, string>>;
+
 export function ChangePasswordDialog({
   open,
   onOpenChange,
 }: ChangePasswordDialogProps) {
+  const router = useRouter();
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [errors, setErrors] = useState<PasswordErrors>({});
 
   const [visibleFields, setVisibleFields] = useState<
     Record<PasswordField, boolean>
@@ -42,12 +51,12 @@ export function ChangePasswordDialog({
 
   const [isPending, startTransition] = useTransition();
 
-  const router = useRouter();
-
   const resetForm = () => {
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
+
+    setErrors({});
 
     setVisibleFields({
       currentPassword: false,
@@ -71,7 +80,85 @@ export function ChangePasswordDialog({
     }));
   };
 
+  const validateForm = () => {
+    const result = updatePasswordSchema.safeParse({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+
+    if (!result.success) {
+      const errors = result.error.issues.reduce((acc, issue) => {
+        if (issue.path.length > 0) {
+          const field = issue.path[0] as PasswordField;
+          acc[field] = issue.message;
+        }
+        return acc;
+      }, {} as PasswordErrors);
+
+      setErrors(errors);
+      return false;
+    }
+
+    setErrors({});
+    return true;
+  };
+
+  const clearFieldError = (field: PasswordField) => {
+    if (!errors[field]) {
+      return;
+    }
+
+    setErrors((previous) => ({
+      ...previous,
+      [field]: undefined,
+    }));
+  };
+
+  const handleCurrentPasswordChange = (value: string) => {
+    setCurrentPassword(value);
+    clearFieldError('currentPassword');
+  };
+
+  const handleNewPasswordChange = (value: string) => {
+    setNewPassword(value);
+    clearFieldError('newPassword');
+
+    if (errors.confirmPassword && value === confirmPassword) {
+      setErrors((previous) => ({
+        ...previous,
+        confirmPassword: undefined,
+      }));
+    }
+  };
+
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    clearFieldError('confirmPassword');
+
+    if (errors.confirmPassword) {
+      const result = updatePasswordSchema.safeParse({
+        currentPassword,
+        newPassword,
+        confirmPassword: value,
+      });
+
+      if (result.success) {
+        setErrors((previous) => ({
+          ...previous,
+          confirmPassword: undefined,
+        }));
+      }
+    }
+  };
+
   const handleSubmit = () => {
+    const isValid = validateForm();
+
+    if (!isValid) {
+      return;
+    }
+
     startTransition(async () => {
       const result = await updatePassword({
         currentPassword,
@@ -114,9 +201,10 @@ export function ChangePasswordDialog({
             id="current-password"
             label="Current password"
             value={currentPassword}
+            error={errors.currentPassword}
             visible={visibleFields.currentPassword}
             disabled={isPending}
-            onChange={setCurrentPassword}
+            onChange={handleCurrentPasswordChange}
             onToggle={() => toggleVisibility('currentPassword')}
           />
 
@@ -124,9 +212,10 @@ export function ChangePasswordDialog({
             id="new-password"
             label="New password"
             value={newPassword}
+            error={errors.newPassword}
             visible={visibleFields.newPassword}
             disabled={isPending}
-            onChange={setNewPassword}
+            onChange={handleNewPasswordChange}
             onToggle={() => toggleVisibility('newPassword')}
           />
 
@@ -134,9 +223,10 @@ export function ChangePasswordDialog({
             id="confirm-password"
             label="Confirm new password"
             value={confirmPassword}
+            error={errors.confirmPassword}
             visible={visibleFields.confirmPassword}
             disabled={isPending}
-            onChange={setConfirmPassword}
+            onChange={handleConfirmPasswordChange}
             onToggle={() => toggleVisibility('confirmPassword')}
           />
 
@@ -150,16 +240,7 @@ export function ChangePasswordDialog({
               Cancel
             </Button>
 
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={
-                !currentPassword ||
-                !newPassword ||
-                !confirmPassword ||
-                isPending
-              }
-            >
+            <Button type="button" onClick={handleSubmit} disabled={isPending}>
               {isPending ? 'Changing...' : 'Change password'}
             </Button>
           </div>
@@ -173,6 +254,7 @@ interface PasswordFieldInputProps {
   id: string;
   label: string;
   value: string;
+  error?: string;
   visible: boolean;
   disabled: boolean;
   onChange: (value: string) => void;
@@ -183,11 +265,14 @@ function PasswordFieldInput({
   id,
   label,
   value,
+  error,
   visible,
   disabled,
   onChange,
   onToggle,
 }: PasswordFieldInputProps) {
+  const errorId = error ? `${id}-error` : undefined;
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -202,6 +287,8 @@ function PasswordFieldInput({
             id === 'current-password' ? 'current-password' : 'new-password'
           }
           disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
           className="pr-10"
         />
 
@@ -215,6 +302,12 @@ function PasswordFieldInput({
           {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </button>
       </div>
+
+      {error && (
+        <p id={errorId} className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

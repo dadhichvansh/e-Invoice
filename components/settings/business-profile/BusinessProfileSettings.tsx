@@ -37,6 +37,12 @@ interface BusinessProfileFormData {
   postalCode: string;
 }
 
+type BusinessProfileField = keyof BusinessProfileFormData;
+
+type BusinessProfileErrors = Partial<
+  Record<BusinessProfileField, string | undefined>
+>;
+
 function getInitialFormData(
   profile: BusinessProfileSettingsProps['profile'],
 ): BusinessProfileFormData {
@@ -56,35 +62,80 @@ function getInitialFormData(
 export function BusinessProfileSettings({
   profile,
 }: BusinessProfileSettingsProps) {
-  const initialFormData = getInitialFormData(profile);
+  const [initialFormData, setInitialFormData] =
+    useState<BusinessProfileFormData>(getInitialFormData(profile));
 
   const [formData, setFormData] =
     useState<BusinessProfileFormData>(initialFormData);
+
+  const [errors, setErrors] = useState<BusinessProfileErrors>({});
 
   const [isPending, startTransition] = useTransition();
 
   const hasChanges =
     JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
-  const handleChange = (
-    field: keyof BusinessProfileFormData,
-    value: string,
-  ) => {
+  const handleChange = (field: BusinessProfileField, value: string) => {
     setFormData((current) => ({
       ...current,
       [field]: value,
     }));
+
+    if (errors[field]) {
+      setErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const result = businessProfileSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors: BusinessProfileErrors = {};
+
+      for (const issue of result.error.issues) {
+        const field = issue.path[0];
+
+        if (
+          typeof field === 'string' &&
+          field in formData &&
+          !fieldErrors[field as BusinessProfileField]
+        ) {
+          fieldErrors[field as BusinessProfileField] = issue.message;
+        }
+      }
+
+      setErrors(fieldErrors);
+
+      return false;
+    }
+
+    setErrors({});
+
+    return true;
   };
 
   const handleSaveChanges = () => {
+    const isValid = validateForm();
+
+    if (!isValid) {
+      return;
+    }
+
     startTransition(async () => {
       const result = await updateBusinessProfile(formData);
 
       if (!result.success) {
+        setErrors(result.fieldErrors);
+
         toast.error(result.message);
         return;
       }
 
+      setInitialFormData(formData);
+      setErrors({});
       toast.success(result.message);
     });
   };
@@ -109,7 +160,9 @@ export function BusinessProfileSettings({
           <div className="grid gap-5 sm:grid-cols-2">
             {/* Business name */}
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="business-name">Business name</Label>
+              <Label htmlFor="business-name">
+                Business name <span className="text-destructive">*</span>
+              </Label>
 
               <Input
                 id="business-name"
@@ -119,12 +172,27 @@ export function BusinessProfileSettings({
                 }
                 placeholder="Your business name"
                 disabled={isPending}
+                aria-invalid={!!errors.businessName}
+                aria-describedby={
+                  errors.businessName ? 'business-name-error' : undefined
+                }
               />
+
+              {errors.businessName && (
+                <p
+                  id="business-name-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.businessName}
+                </p>
+              )}
             </div>
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="business-email">Business email</Label>
+              <Label htmlFor="business-email">
+                Business email <span className="text-destructive">*</span>
+              </Label>
 
               <Input
                 id="business-email"
@@ -133,7 +201,20 @@ export function BusinessProfileSettings({
                 onChange={(event) => handleChange('email', event.target.value)}
                 placeholder="business@example.com"
                 disabled={isPending}
+                aria-invalid={!!errors.email}
+                aria-describedby={
+                  errors.email ? 'business-email-error' : undefined
+                }
               />
+
+              {errors.email && (
+                <p
+                  id="business-email-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.email}
+                </p>
+              )}
             </div>
 
             {/* Phone */}
@@ -147,7 +228,20 @@ export function BusinessProfileSettings({
                 onChange={(event) => handleChange('phone', event.target.value)}
                 placeholder="+91 98765 43210"
                 disabled={isPending}
+                aria-invalid={!!errors.phone}
+                aria-describedby={
+                  errors.phone ? 'business-phone-error' : undefined
+                }
               />
+
+              {errors.phone && (
+                <p
+                  id="business-phone-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.phone}
+                </p>
+              )}
             </div>
 
             {/* Website */}
@@ -163,7 +257,20 @@ export function BusinessProfileSettings({
                 }
                 placeholder="https://example.com"
                 disabled={isPending}
+                aria-invalid={!!errors.website}
+                aria-describedby={
+                  errors.website ? 'business-website-error' : undefined
+                }
               />
+
+              {errors.website && (
+                <p
+                  id="business-website-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.website}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -194,7 +301,20 @@ export function BusinessProfileSettings({
               onChange={(event) => handleChange('address', event.target.value)}
               placeholder="Street address"
               disabled={isPending}
+              aria-invalid={!!errors.address}
+              aria-describedby={
+                errors.address ? 'business-address-error' : undefined
+              }
             />
+
+            {errors.address && (
+              <p
+                id="business-address-error"
+                className="text-sm text-destructive"
+              >
+                {errors.address}
+              </p>
+            )}
           </div>
 
           {/* City / State / Country / Postal code */}
@@ -209,7 +329,20 @@ export function BusinessProfileSettings({
                 onChange={(event) => handleChange('city', event.target.value)}
                 placeholder="Jaipur"
                 disabled={isPending}
+                aria-invalid={!!errors.city}
+                aria-describedby={
+                  errors.city ? 'business-city-error' : undefined
+                }
               />
+
+              {errors.city && (
+                <p
+                  id="business-city-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.city}
+                </p>
+              )}
             </div>
 
             {/* State */}
@@ -222,7 +355,20 @@ export function BusinessProfileSettings({
                 onChange={(event) => handleChange('state', event.target.value)}
                 placeholder="Rajasthan"
                 disabled={isPending}
+                aria-invalid={!!errors.state}
+                aria-describedby={
+                  errors.state ? 'business-state-error' : undefined
+                }
               />
+
+              {errors.state && (
+                <p
+                  id="business-state-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.state}
+                </p>
+              )}
             </div>
 
             {/* Country */}
@@ -237,7 +383,20 @@ export function BusinessProfileSettings({
                 }
                 placeholder="India"
                 disabled={isPending}
+                aria-invalid={!!errors.country}
+                aria-describedby={
+                  errors.country ? 'business-country-error' : undefined
+                }
               />
+
+              {errors.country && (
+                <p
+                  id="business-country-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.country}
+                </p>
+              )}
             </div>
 
             {/* Postal code */}
@@ -252,7 +411,20 @@ export function BusinessProfileSettings({
                 }
                 placeholder="302001"
                 disabled={isPending}
+                aria-invalid={!!errors.postalCode}
+                aria-describedby={
+                  errors.postalCode ? 'business-postal-code-error' : undefined
+                }
               />
+
+              {errors.postalCode && (
+                <p
+                  id="business-postal-code-error"
+                  className="text-sm text-destructive"
+                >
+                  {errors.postalCode}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>

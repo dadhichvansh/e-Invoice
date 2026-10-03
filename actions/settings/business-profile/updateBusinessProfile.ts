@@ -1,19 +1,45 @@
 'use server';
 
-import { z } from 'zod';
-
 import { prisma } from '@/lib/db/prisma';
 import { requireAuthentication } from '@/lib/authentication/requireAuthentication';
-import { businessProfileSchema } from '@/lib/validators/businessProfile';
+import {
+  businessProfileSchema,
+  type BusinessProfileInput,
+} from '@/lib/validators/businessProfile';
 
-export async function updateBusinessProfile(input: unknown) {
+type BusinessProfileFieldErrors = Partial<
+  Record<keyof BusinessProfileInput, string>
+>;
+
+type UpdateBusinessProfileResult =
+  | {
+      success: true;
+      message: string;
+    }
+  | {
+      success: false;
+      message: string;
+      fieldErrors: BusinessProfileFieldErrors;
+    };
+
+export async function updateBusinessProfile(
+  input: unknown,
+): Promise<UpdateBusinessProfileResult> {
   try {
     const { user } = await requireAuthentication();
 
     const result = businessProfileSchema.safeParse(input);
 
     if (!result.success) {
-      const fieldErrors = z.treeifyError(result.error);
+      const fieldErrors: BusinessProfileFieldErrors = {};
+
+      for (const issue of result.error.issues) {
+        const field = issue.path[0];
+
+        if (typeof field === 'string' && !(field in fieldErrors)) {
+          fieldErrors[field as keyof BusinessProfileInput] = issue.message;
+        }
+      }
 
       return {
         success: false,

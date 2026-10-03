@@ -7,7 +7,7 @@ export const bankTransferDetailsSchema = z.object({
     .min(1, 'Account holder name is required.'),
   bankName: z.string().trim().min(1, 'Bank name is required.'),
   accountNumber: z.string().trim().min(1, 'Account number is required.'),
-  ifsc: z.string().trim().min(1, 'IFSC code is required.'),
+  ifsc: z.string().trim().toUpperCase().min(1, 'IFSC code is required.'),
   swift: z.string().trim().optional(),
 });
 

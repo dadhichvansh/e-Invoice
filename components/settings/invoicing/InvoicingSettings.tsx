@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 
 import { InvoiceDefaults } from './InvoiceDefaults';
 import { InvoiceCategories } from './InvoiceCategories';
+import { CurrencySettings } from './CurrencySettings';
 import { DefaultInvoiceNotes } from './DefaultInvoiceNotes';
 
 import { updateInvoicingSettings } from '@/actions/settings/invoicing/invoicingSettings';
-import { CurrencySettings } from './CurrencySettings';
+
+import { invoicingSettingsSchema } from '@/lib/validators/invoicingSettings';
 
 interface InvoicingSettingsProps {
   settings: {
@@ -45,6 +47,10 @@ interface InvoicingFormData {
   defaultNotes: string;
 }
 
+type InvoicingField = keyof InvoicingFormData;
+
+type InvoicingErrors = Partial<Record<InvoicingField, string | undefined>>;
+
 function getInitialFormData(
   settings: InvoicingSettingsProps['settings'],
 ): InvoicingFormData {
@@ -65,9 +71,14 @@ export function InvoicingSettings({
   categories,
   currencies,
 }: InvoicingSettingsProps) {
-  const initialFormData = getInitialFormData(settings);
+  const [initialFormData, setInitialFormData] = useState<InvoicingFormData>(
+    getInitialFormData(settings),
+  );
 
   const [formData, setFormData] = useState<InvoicingFormData>(initialFormData);
+
+  const [errors, setErrors] = useState<InvoicingErrors>({});
+
   const [isSaving, setIsSaving] = useState(false);
 
   const hasChanges =
@@ -76,14 +87,61 @@ export function InvoicingSettings({
     formData.defaultPaymentTerms !== initialFormData.defaultPaymentTerms ||
     formData.defaultNotes !== initialFormData.defaultNotes;
 
-  const handleChange = (field: keyof InvoicingFormData, value: string) => {
+  const handleChange = (field: InvoicingField, value: string) => {
     setFormData((current) => ({
       ...current,
       [field]: value,
     }));
+
+    if (errors[field]) {
+      setErrors((current) => ({
+        ...current,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const result = invoicingSettingsSchema.safeParse({
+      invoicePrefix: formData.invoicePrefix,
+      defaultCurrency: formData.defaultCurrency,
+      defaultPaymentTerms:
+        formData.defaultPaymentTerms === ''
+          ? NaN
+          : Number(formData.defaultPaymentTerms),
+      defaultNotes: formData.defaultNotes,
+    });
+
+    if (!result.success) {
+      const fieldErrors: InvoicingErrors = {};
+
+      for (const issue of result.error.issues) {
+        const field = issue.path[0];
+
+        if (
+          typeof field === 'string' &&
+          field in formData &&
+          !fieldErrors[field as InvoicingField]
+        ) {
+          fieldErrors[field as InvoicingField] = issue.message;
+        }
+      }
+
+      setErrors(fieldErrors);
+      return false;
+    }
+
+    setErrors({});
+    return true;
   };
 
   const handleSaveChanges = async () => {
+    const isValid = validateForm();
+
+    if (!isValid) {
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -95,9 +153,14 @@ export function InvoicingSettings({
       });
 
       if (!result.success) {
+        setErrors(result.fieldErrors);
+
         toast.error(result.message);
         return;
       }
+
+      setInitialFormData(formData);
+      setErrors({});
 
       toast.success(result.message);
     } finally {
@@ -116,6 +179,12 @@ export function InvoicingSettings({
         }}
         onChange={handleChange}
         currencies={currencies}
+        errors={{
+          invoicePrefix: errors.invoicePrefix,
+          defaultCurrency: errors.defaultCurrency,
+          defaultPaymentTerms: errors.defaultPaymentTerms,
+        }}
+        isSaving={isSaving}
       />
 
       {/* Invoice categories */}
@@ -128,6 +197,7 @@ export function InvoicingSettings({
       <DefaultInvoiceNotes
         value={formData.defaultNotes}
         onChange={(value) => handleChange('defaultNotes', value)}
+        error={errors.defaultNotes}
       />
 
       {/* Actions */}

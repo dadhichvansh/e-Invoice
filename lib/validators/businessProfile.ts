@@ -4,13 +4,12 @@ export const businessProfileSchema = z.object({
   businessName: z
     .string()
     .trim()
-    .min(1, 'Business name is required.')
+    .min(3, 'Business name is required.')
     .max(100, 'Business name must be 100 characters or less.'),
   email: z
     .email('Enter a valid business email.')
     .trim()
-    .max(255, 'Email must be 255 characters or less.')
-    .or(z.literal('')),
+    .max(255, 'Email must be 255 characters or less.'),
   phone: z
     .string()
     .trim()

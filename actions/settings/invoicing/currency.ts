@@ -6,16 +6,40 @@ import { requireAuthentication } from '@/lib/authentication/requireAuthenticatio
 import { prisma } from '@/lib/db/prisma';
 import { currencySchema, type CurrencyInput } from '@/lib/validators/currency';
 
-export async function createCurrency(input: CurrencyInput) {
+type CurrencyFieldErrors = Partial<Record<keyof CurrencyInput, string>>;
+
+type CurrencyResult =
+  | {
+      success: true;
+      message: string;
+      currency?: Awaited<ReturnType<typeof prisma.currency.create>>;
+    }
+  | {
+      success: false;
+      message: string;
+      fieldErrors: CurrencyFieldErrors;
+    };
+
+export async function createCurrency(input: unknown): Promise<CurrencyResult> {
   const { user } = await requireAuthentication();
 
   const validatedInput = currencySchema.safeParse(input);
 
   if (!validatedInput.success) {
+    const fieldErrors: CurrencyFieldErrors = {};
+
+    for (const issue of validatedInput.error.issues) {
+      const field = issue.path[0];
+
+      if (typeof field === 'string' && !(field in fieldErrors)) {
+        fieldErrors[field as keyof CurrencyInput] = issue.message;
+      }
+    }
+
     return {
       success: false,
-      message:
-        validatedInput.error.issues[0]?.message ?? 'Invalid currency details.',
+      message: 'Please correct the highlighted fields.',
+      fieldErrors,
     };
   }
 
@@ -34,6 +58,9 @@ export async function createCurrency(input: CurrencyInput) {
     return {
       success: false,
       message: 'This currency has already been added.',
+      fieldErrors: {
+        code: 'This currency code has already been added.',
+      },
     };
   }
 
@@ -56,16 +83,29 @@ export async function createCurrency(input: CurrencyInput) {
   };
 }
 
-export async function updateCurrency(currencyId: string, input: CurrencyInput) {
+export async function updateCurrency(
+  currencyId: string,
+  input: unknown,
+): Promise<CurrencyResult> {
   const { user } = await requireAuthentication();
 
   const validatedInput = currencySchema.safeParse(input);
 
   if (!validatedInput.success) {
+    const fieldErrors: CurrencyFieldErrors = {};
+
+    for (const issue of validatedInput.error.issues) {
+      const field = issue.path[0];
+
+      if (typeof field === 'string' && !(field in fieldErrors)) {
+        fieldErrors[field as keyof CurrencyInput] = issue.message;
+      }
+    }
+
     return {
       success: false,
-      message:
-        validatedInput.error.issues[0]?.message ?? 'Invalid currency details.',
+      message: 'Please correct the highlighted fields.',
+      fieldErrors,
     };
   }
 
@@ -82,6 +122,7 @@ export async function updateCurrency(currencyId: string, input: CurrencyInput) {
     return {
       success: false,
       message: 'Currency not found.',
+      fieldErrors: {},
     };
   }
 
@@ -99,6 +140,9 @@ export async function updateCurrency(currencyId: string, input: CurrencyInput) {
     return {
       success: false,
       message: 'This currency has already been added.',
+      fieldErrors: {
+        code: 'This currency code has already been added.',
+      },
     };
   }
 

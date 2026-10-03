@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,13 +24,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Prisma } from '@/lib/db/generated/prisma/client';
+import type { PaymentMethodType } from '@/types/payment-method';
+import type { Prisma } from '@/lib/db/generated/prisma/client';
 
 import { createPaymentMethod } from '@/actions/settings/payment-methods/createPaymentMethod';
 import { updatePaymentMethod } from '@/actions/settings/payment-methods/updatePaymentMethod';
-
-import type { PaymentMethodType } from '@/types/payment-method';
-import { useRouter } from 'next/navigation';
 
 interface PaymentMethodToEdit {
   id: string;
